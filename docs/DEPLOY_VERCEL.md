@@ -1,34 +1,36 @@
 # Test deployment: GitHub → Vercel (+ Supabase Postgres)
 
-Every push to `main` deploys automatically. Only **two environment variables** are required;
-everything else has a test-phase default.
+Every push to `main` deploys automatically. Only **one environment variable** is required:
+`DATABASE_URL`. Everything else has a test-phase default.
 
 ## 1. Database (Supabase, free tier)
 
 1. supabase.com → **New project** (Region: Singapore is closest to Bangladesh). Save the DB password.
-2. **Connect** button (top of the dashboard) → **ORMs → Prisma**. It shows two URLs:
-   * **Transaction pooler** (port **6543**) → `DATABASE_URL`
-   * **Session pooler** (port **5432**) → `DIRECT_URL`
-3. Add the **`nexdrop` schema** to both. Without it, the tables would land in `public`, which Supabase's REST API exposes:
+2. **Connect** button (top of the dashboard) → **ORMs → Prisma** → copy the **Transaction pooler** URL (port **6543**)
+   and put your DB password in it. That's your `DATABASE_URL`:
 
 ```
-DATABASE_URL=postgresql://postgres.<ref>:<PASSWORD>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&schema=nexdrop
-DIRECT_URL=postgresql://postgres.<ref>:<PASSWORD>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?schema=nexdrop
+DATABASE_URL=postgresql://postgres.<ref>:<PASSWORD>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
 ```
 
-Use the *pooler* hosts, not `db.<ref>.supabase.co`, which is IPv6-only and unreachable from Vercel builds.
-If the password contains `@ # / ?`, URL-encode it.
+The build adds the rest automatically (see `src/lib/db-url.ts`):
+* `pgbouncer=true` and `connection_limit=1` for the transaction pooler
+* `schema=nexdrop`, which keeps the tables out of Supabase's public REST API
+* `DIRECT_URL` for migrations (same host on the session port **5432**), unless you set it yourself
+
+Use the *pooler* host, not `db.<ref>.supabase.co`, which is IPv6-only and unreachable from Vercel.
+If the password contains `@ # / ?`, URL-encode it (`@` → `%40`).
 
 ## 2. Vercel
 
 1. vercel.com → **Add New → Project → Import** your GitHub repo. The framework (Next.js) is detected automatically.
-2. **Environment Variables:** `DATABASE_URL` and `DIRECT_URL` from step 1. That's all.
+2. **Environment Variables:** `DATABASE_URL` from step 1. That's all. `DIRECT_URL` is optional.
 3. **Deploy.**
 
 The `vercel-build` script runs on every deploy:
 
 ```
-prisma generate → prisma migrate deploy → seed (idempotent) → next build
+resolve DB URLs → prisma generate → prisma migrate deploy → seed (idempotent) → next build
 ```
 
 On the first deploy, the seed creates the plans, the **demo logins** and the demo stores with 12 months of orders.
@@ -62,7 +64,8 @@ Optional: `MARKETPLACE_WEBHOOK_URL`/`MARKETPLACE_WEBHOOK_SECRET`, plus `STOREFRO
 
 ## Troubleshooting
 
-* **Build fails at `prisma migrate deploy`:** check `DIRECT_URL` (session pooler, port 5432) and the password encoding.
+* **Build fails at `prisma migrate deploy`:** check the password (URL-encoded?) and that the URL uses the `pooler.supabase.com` host.
+  The build log prints the resolved URLs with the password masked.
 * **"prepared statement already exists" errors:** `DATABASE_URL` is missing `pgbouncer=true`.
 * **Sign-in loops back to /login:** an old cookie from another deployment. Clear the site's cookies.
 * Logs: Vercel → Project → **Logs**.

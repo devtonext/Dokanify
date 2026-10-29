@@ -7,7 +7,8 @@ import { createHash } from 'crypto'
  * everyone out and make encrypted payment secrets unreadable.
  */
 function derive(label: string) {
-  const seed = process.env.DATABASE_URL
+  // Query params are ignored: src/lib/db-url.ts may add some (schema, pgbouncer) at runtime.
+  const seed = process.env.DATABASE_URL?.split('?')[0]
   if (!seed) throw new Error(`${label} is not configured`)
   return createHash('sha256').update(`nexdrop:${label}:${seed}`).digest()
 }

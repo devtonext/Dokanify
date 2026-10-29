@@ -7,6 +7,9 @@ import { OrderStatus, PaymentMethod, PaymentStatus, Prisma, PrismaClient, type C
 import bcrypt from 'bcryptjs'
 import { DEMO_ACCOUNTS } from '../src/lib/demo'
 
+import { applyDatabaseUrls } from '../src/lib/db-url'
+
+applyDatabaseUrls()
 const db = new PrismaClient()
 
 const PLANS = [

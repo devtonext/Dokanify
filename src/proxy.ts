@@ -20,7 +20,10 @@ export async function proxy(req: NextRequest) {
   // API routes and public assets do their own auth.
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next()
 
-  const token = await getToken({ req, secret: authSecret() })
+  // NextAuth names the cookie "__Secure-…" when it thinks the site is HTTPS (always on Vercel).
+  // Accept either name — both are signed JWTs verified with the same secret.
+  const secret = authSecret()
+  const token = (await getToken({ req, secret, secureCookie: true })) ?? (await getToken({ req, secret, secureCookie: false }))
   if (!token) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
