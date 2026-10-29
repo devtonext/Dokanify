@@ -5,6 +5,7 @@
  */
 import { OrderStatus, PaymentMethod, PaymentStatus, Prisma, PrismaClient, type Customer, type Product } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { DEMO_ACCOUNTS } from '../src/lib/demo'
 
 const db = new PrismaClient()
 
@@ -140,6 +141,20 @@ async function main() {
     update: {},
   })
   console.log(`✔ super admin: ${email}`)
+
+  // Demo logins (one per role). They can only sign in while DEMO_MODE=true.
+  if (process.env.SEED_DEMO !== 'false' || process.env.DEMO_MODE === 'true') {
+    for (const a of DEMO_ACCOUNTS) {
+      const passwordHash = await bcrypt.hash(a.password, 12)
+      // Always reset: testers can't permanently break a demo account.
+      await db.adminUser.upsert({
+        where: { email: a.email },
+        create: { email: a.email, name: a.name, role: a.role, passwordHash },
+        update: { name: a.name, role: a.role, passwordHash, isActive: true },
+      })
+    }
+    console.log(`✔ demo logins: ${DEMO_ACCOUNTS.map((a) => a.email).join(', ')} (password ${DEMO_ACCOUNTS[0].password})`)
+  }
 
   if (process.env.SEED_DEMO === 'false') return
   if (await db.store.findUnique({ where: { slug: 'demo' } })) {

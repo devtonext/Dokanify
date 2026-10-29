@@ -51,7 +51,8 @@ THEME_MAX_ZIP_MB=80
 SEED_ADMIN_EMAIL=you@example.com
 SEED_ADMIN_PASSWORD=<strong password>
 RUN_SEED=true                                  # first deploy only, then set to false
-SEED_DEMO=false                                # true = also create demo stores/orders
+SEED_DEMO=false                                # true = also create demo stores/orders + demo logins
+DEMO_MODE=false                                # true = one-click demo logins on the sign-in page
 STOREFRONT_ROOT_DOMAIN=shops.example.com       # optional, see step 3
 MARKETPLACE_WEBHOOK_URL=                       # optional, NexDrop marketplace sync
 MARKETPLACE_WEBHOOK_SECRET=
@@ -61,6 +62,11 @@ MARKETPLACE_WEBHOOK_SECRET=
 
 On every start, the container runs `prisma migrate deploy` (applies new migrations, otherwise does
 nothing) and then starts the server. After the first successful deploy, set `RUN_SEED=false`.
+
+### Public demo server
+
+For a demo instance, set `DEMO_MODE=true`, `SEED_DEMO=true` and `RUN_SEED=true`, and leave them on.
+Every restart then re-applies the demo logins (password `Demo@12345`). Use a separate database or schema from production.
 
 ## 3. Storefront subdomains (optional)
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { audit } from '@/lib/audit'
-import { requireAdmin } from '@/lib/auth'
+import { assertNotDemo, requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { badRequest, ok, route } from '@/lib/http'
 
@@ -14,6 +14,7 @@ const patch = z.object({
 
 export const PATCH = route<Ctx>(async (req, { params }) => {
   const actor = await requireAdmin('SUPER_ADMIN')
+  assertNotDemo(actor, 'Changing team members')
   const { id } = await params
   const input = patch.parse(await req.json())
   if (id === actor.id && (input.isActive === false || (input.role && input.role !== 'SUPER_ADMIN'))) {

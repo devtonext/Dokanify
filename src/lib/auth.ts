@@ -5,6 +5,7 @@ import { getServerSession, type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { isDemoEmail } from '@/lib/demo'
 import { HttpError } from '@/lib/http'
 
 export const authOptions: NextAuthOptions = {
@@ -17,6 +18,8 @@ export const authOptions: NextAuthOptions = {
       async authorize(raw) {
         const parsed = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse(raw)
         if (!parsed.success) return null
+        // Demo accounts only work while DEMO_MODE is on — never a known-password backdoor in production.
+        if (isDemoEmail(parsed.data.email) && process.env.DEMO_MODE !== 'true') return null
         const user = await db.adminUser.findUnique({ where: { email: parsed.data.email.toLowerCase() } })
         if (!user || !user.isActive) return null
         if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return null
@@ -61,3 +64,8 @@ export async function requireAdmin(...roles: AdminRole[]): Promise<SessionAdmin>
 
 export const hashPassword = (password: string) => bcrypt.hash(password, 12)
 export const verifyPassword = (password: string, hash: string) => bcrypt.compare(password, hash)
+
+/** Blocks actions that would let one demo tester lock others out. */
+export function assertNotDemo(admin: SessionAdmin, action = 'This action') {
+  if (isDemoEmail(admin.email)) throw new HttpError(403, `${action} is disabled for demo accounts`)
+}

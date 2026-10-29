@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { audit } from '@/lib/audit'
-import { hashPassword, requireAdmin, verifyPassword } from '@/lib/auth'
+import { assertNotDemo, hashPassword, requireAdmin, verifyPassword } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { badRequest, ok, route } from '@/lib/http'
 
@@ -14,6 +14,7 @@ const input = z
 
 export const POST = route(async (req) => {
   const session = await requireAdmin()
+  assertNotDemo(session, 'Changing the password')
   const { current, next } = input.parse(await req.json())
   const admin = await db.adminUser.findUniqueOrThrow({ where: { id: session.id } })
   if (!(await verifyPassword(current, admin.passwordHash))) throw badRequest('Current password is incorrect')

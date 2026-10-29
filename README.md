@@ -22,6 +22,21 @@ npm run db:seed                 # plans, super admin, 3 demo stores with 12 mont
 npm run dev                     # http://localhost:3000
 ```
 
+### Demo logins
+
+Set `DEMO_MODE=true` and run `npm run db:seed`. The sign-in page then shows one-click logins
+(password `Demo@12345` for all):
+
+| Account | Role | Can test |
+| --- | --- | --- |
+| `demo.superadmin@nexdrop.app` | Super admin | everything: stores, plans, themes, all settings |
+| `demo.themes@nexdrop.app` | Theme manager | upload, review, publish and release themes |
+| `demo.support@nexdrop.app` | Support | orders, products, customers, store settings, theme customization |
+
+Demo accounts can't change passwords, manage the team or delete themes, so testers can't lock each other out.
+With `DEMO_MODE=false` the buttons disappear and these accounts **can't sign in at all**.
+Re-running the seed resets their passwords and roles. Accounts are defined in `src/lib/demo.ts`.
+
 Try the theme flow:
 
 ```bash
