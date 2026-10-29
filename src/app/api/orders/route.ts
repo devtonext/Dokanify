@@ -1,82 +1,84 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
+import { requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { badRequest, ok, pagination, route, searchParams } from '@/lib/http'
+import { createOrder, createOrderSchema } from '@/server/orders'
 
-// GET all orders
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const paymentMethod = searchParams.get('paymentMethod')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+const day = 86400_000
 
-    const where: any = {}
-    if (status) {
-      where.status = status.toUpperCase()
-    }
-    if (paymentMethod) {
-      where.paymentMethod = paymentMethod
-    }
+function since(range: string | null) {
+  const now = new Date()
+  switch (range) {
+    case 'today':
+      now.setHours(0, 0, 0, 0)
+      return now
+    case 'week':
+      return new Date(Date.now() - 7 * day)
+    case 'month':
+      return new Date(Date.now() - 30 * day)
+    case 'year':
+      return new Date(Date.now() - 365 * day)
+    default:
+      return undefined
+  }
+}
 
-    const orders = await db.order.findMany({
+export const GET = route(async (req) => {
+  await requireAdmin()
+  const params = searchParams(req)
+  const { take, skip, page, limit } = pagination(params)
+  const storeId = params.get('store') || undefined
+  const status = params.get('status')
+  const method = params.get('payment')
+  const search = params.get('search')?.trim().replace(/^#/, '')
+  const from = since(params.get('range'))
+  const customerId = params.get('customer') || undefined
+
+  const where: Prisma.OrderWhereInput = {
+    storeId,
+    customerId,
+    ...(status && status !== 'all' ? { status: status as any } : {}),
+    ...(method && method !== 'all' ? { paymentMethod: method as any } : {}),
+    ...(from ? { createdAt: { gte: from } } : {}),
+    ...(search
+      ? {
+          OR: [
+            ...(/^\d+$/.test(search) ? [{ orderNumber: Number(search) }, { shippingPhone: { contains: search.replace(/^0/, '') } }] : []),
+            { shippingName: { contains: search, mode: 'insensitive' } },
+            { trackingCode: { contains: search } },
+          ],
+        }
+      : {}),
+  }
+  const [orders, total, counts] = await Promise.all([
+    db.order.findMany({
       where,
+      orderBy: { createdAt: 'desc' },
+      take,
+      skip,
       include: {
-        customer: true
+        customer: { select: { name: true, email: true } },
+        store: { select: { name: true, slug: true } },
+        _count: { select: { items: true } },
       },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: limit,
-      skip: offset
-    })
+    }),
+    db.order.count({ where }),
+    db.order.groupBy({ by: ['status'], where: { storeId }, _count: true }),
+  ])
+  return ok({
+    orders,
+    total,
+    page,
+    limit,
+    statusCounts: Object.fromEntries(counts.map((c) => [c.status, c._count])),
+  })
+})
 
-    const total = await db.order.count({ where })
-
-    return NextResponse.json({
-      orders,
-      total,
-      limit,
-      offset
-    })
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST create new order
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    
-    const order = await db.order.create({
-      data: {
-        orderNumber: body.orderNumber,
-        customerId: body.customerId,
-        status: body.status || 'PENDING',
-        subtotal: body.subtotal,
-        shipping: body.shipping || 0,
-        discount: body.discount || 0,
-        total: body.total,
-        paymentMethod: body.paymentMethod,
-        paymentStatus: body.paymentStatus || 'PENDING',
-        shippingAddress: body.shippingAddress,
-        city: body.city,
-        phone: body.phone,
-        notes: body.notes,
-        items: JSON.stringify(body.items || [])
-      }
-    })
-
-    return NextResponse.json(order, { status: 201 })
-  } catch (error) {
-    console.error('Error creating order:', error)
-    return NextResponse.json(
-      { error: 'Failed to create order' },
-      { status: 500 }
-    )
-  }
-}
+export const POST = route(async (req) => {
+  const admin = await requireAdmin('SUPPORT')
+  const body = await req.json()
+  if (!body.storeId) throw badRequest('storeId is required')
+  const input = createOrderSchema.parse(body)
+  const order = await createOrder(body.storeId, input, { source: 'admin', actorId: admin.id })
+  return ok({ order }, { status: 201 })
+})

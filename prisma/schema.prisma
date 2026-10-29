@@ -1,107 +1,173 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// NexDrop super admin — multi-store commerce + theme platform for Bangladesh.
+// All money is stored in BDT as Decimal(12,2).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ─── Admin & access ──────────────────────────────────────────────────────────
+
+enum AdminRole {
+  SUPER_ADMIN
+  THEME_MANAGER
+  SUPPORT
 }
 
-model Post {
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(SUPPORT)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs      AuditLog[]
+  themeVersions  ThemeVersion[]
+}
+
+model AuditLog {
+  id        String     @id @default(cuid())
+  actorId   String?
+  actor     AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String // e.g. theme.upload, order.status
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime   @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
   id        String   @id @default(cuid())
   title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  body      String
+  href      String?
+  read      Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([read, createdAt])
 }
 
-// Store settings for Bangladeshi market
+// ─── Plans & stores (tenants) ────────────────────────────────────────────────
+
+model Plan {
+  id           String  @id @default(cuid())
+  key          String  @unique // free | pro | business
+  name         String
+  rank         Int     @unique // higher rank unlocks everything a lower rank has
+  priceMonthly Decimal @db.Decimal(12, 2)
+  // Feature flags unlocked by this plan (bkash, nagad, blog, bilingual, custom-domain…)
+  features     String[]
+  maxProducts  Int?
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stores Store[]
+}
+
+enum StoreStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
 model Store {
-  id              String   @id @default(cuid())
-  name            String
-  phone           String
-  email           String
-  address         String
-  city            String
-  logo            String?
-  currency        String   @default("BDT")
-  paymentMethods  String   // JSON string: ["bkash", "nagad", "rocket", "cod"]
-  shippingZones   String   // JSON string of shipping zones
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id         String      @id @default(cuid())
+  slug       String      @unique
+  name       String
+  ownerName  String
+  email      String
+  phone      String
+  address    String?
+  city       String?
+  status     StoreStatus @default(ACTIVE)
+  planId     String
+  plan       Plan        @relation(fields: [planId], references: [id])
+  timezone   String      @default("Asia/Dhaka")
+  language   String      @default("en")
+  // Payments / shipping / notifications. Secrets inside are AES-GCM encrypted.
+  settings   Json        @default("{}")
+  orderSeq   Int         @default(1000)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  products      Product[]
+  customers     Customer[]
+  orders        Order[]
+  themeInstalls ThemeInstall[]
+  media         MediaAsset[]
+
+  @@index([status])
 }
 
-// Product model with pricing in BDT
+// ─── Catalog & orders ────────────────────────────────────────────────────────
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Float    // In BDT
-  comparePrice Float?  // Original price for discount
-  sku         String   @unique
-  barcode     String?
-  quantity    Int      @default(0)
-  images      String   // JSON string of image URLs
-  category    String?
-  tags        String   // JSON string of tags
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String        @id @default(cuid())
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name         String
+  slug         String
+  description  String?
+  price        Decimal       @db.Decimal(12, 2)
+  comparePrice Decimal?      @db.Decimal(12, 2)
+  sku          String
+  quantity     Int           @default(0)
+  images       String[]
+  category     String?
+  tags         String[]
+  status       ProductStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  orderItems OrderItem[]
+
+  @@unique([storeId, sku])
+  @@unique([storeId, slug])
+  @@index([storeId, status])
+  @@index([storeId, category])
 }
 
-// Customer model with Bangladeshi phone format
 model Customer {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name        String
-  email       String   @unique
-  phone       String   // Bangladeshi format: +880...
+  email       String?
+  phone       String // normalised +8801XXXXXXXXX
   address     String?
   city        String?
-  totalSpent  Float    @default(0) // In BDT
-  orderCount  Int      @default(0)
+  district    String?
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]
-}
+  isBlocked   Boolean   @default(false)
+  totalSpent  Decimal   @default(0) @db.Decimal(12, 2)
+  orderCount  Int       @default(0)
+  lastOrderAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-// Order model with Bangladeshi payment methods
-model Order {
-  id              String   @id @default(cuid())
-  orderNumber     String   @unique
-  customerId      String
-  customer        Customer @relation(fields: [customerId], references: [id])
-  status          OrderStatus @default(PENDING)
-  subtotal        Float    // In BDT
-  shipping        Float    @default(0) // In BDT
-  discount        Float    @default(0) // In BDT
-  total           Float    // In BDT
-  paymentMethod   String   // bkash, nagad, rocket, cod
-  paymentStatus   PaymentStatus @default(PENDING)
-  shippingAddress String
-  city            String
-  phone           String
-  notes           String?
-  items           String   // JSON string of order items
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  orders Order[]
+
+  @@unique([storeId, phone])
+  @@index([storeId, city])
 }
 
 enum OrderStatus {
@@ -118,4 +184,156 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  ROCKET
+  SSLCOMMERZ
+  COD
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orderNumber     Int
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  transactionId   String?
+  subtotal        Decimal       @db.Decimal(12, 2)
+  shippingFee     Decimal       @default(0) @db.Decimal(12, 2)
+  discount        Decimal       @default(0) @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  shippingName    String
+  shippingPhone   String
+  shippingAddress String
+  city            String
+  district        String?
+  shippingZone    String?
+  courier         String? // pathao | steadfast | redx
+  trackingCode    String?
+  notes           String?
+  source          String        @default("admin") // admin | storefront
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items OrderItem[]
+
+  @@unique([storeId, orderNumber])
+  @@index([storeId, status])
+  @@index([storeId, createdAt])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  sku       String
+  price     Decimal  @db.Decimal(12, 2)
+  quantity  Int
+
+  @@index([productId])
+}
+
+// ─── Themes ──────────────────────────────────────────────────────────────────
+
+enum ThemeStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model Theme {
+  id               String      @id @default(cuid())
+  slug             String      @unique // theme.json "id"
+  name             String
+  niche            String
+  description      String?
+  status           ThemeStatus @default(DRAFT)
+  price            Decimal     @default(0) @db.Decimal(12, 2)
+  minPlanKey       String      @default("free")
+  featured         Boolean     @default(false)
+  currentVersionId String?     @unique
+  currentVersion   ThemeVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  versions ThemeVersion[] @relation("Versions")
+  installs ThemeInstall[]
+
+  @@index([status, niche])
+}
+
+model ThemeVersion {
+  id             String     @id @default(cuid())
+  themeId        String
+  theme          Theme      @relation("Versions", fields: [themeId], references: [id], onDelete: Cascade)
+  currentOf      Theme?     @relation("CurrentVersion")
+  version        String
+  manifest       Json
+  settingsSchema Json // global settings groups
+  sectionSchemas Json // { [type]: SectionSchema }
+  defaults       Json // default ThemeContent
+  features       String[]
+  storagePrefix  String // themes/{slug}/{version}
+  coverPath      String?
+  screenshots    String[]
+  sourceKey      String? // zip of source/ for marketplace download
+  sizeBytes      Int
+  fileCount      Int
+  changelog      String?
+  report         Json? // validation report (warnings)
+  uploadedById   String?
+  uploadedBy     AdminUser? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime   @default(now())
+
+  installs          ThemeInstall[] @relation("InstallDraftVersion")
+  publishedInstalls ThemeInstall[] @relation("InstallPublishedVersion")
+
+  @@unique([themeId, version])
+}
+
+model ThemeInstall {
+  id               String       @id @default(cuid())
+  storeId          String
+  store            Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  themeId          String
+  theme            Theme        @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  versionId        String
+  version          ThemeVersion @relation("InstallDraftVersion", fields: [versionId], references: [id])
+  isLive           Boolean      @default(false)
+  draftContent     Json
+  // The live storefront renders publishedContent with publishedVersion (drafts may be on a newer version).
+  publishedVersionId String?
+  publishedVersion   ThemeVersion? @relation("InstallPublishedVersion", fields: [publishedVersionId], references: [id])
+  publishedContent Json?
+  publishedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([storeId, themeId])
+  @@index([storeId, isLive])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  storeId   String?
+  store     Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  key       String   @unique
+  url       String
+  mime      String
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@index([storeId])
 }
