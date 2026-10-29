@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { ok, pagination, searchParams } from '@/lib/http'
-import { cors, CORS, publicRoute, getActiveStore } from '@/server/storefront'
+import { cors, CORS, publicRoute, getActiveStore, PREVIEW_STORE } from '@/server/storefront'
 
 type Ctx = { params: Promise<{ store: string }> }
 
@@ -28,7 +28,9 @@ const publicProduct = {
 } satisfies Prisma.ProductSelect
 
 export const GET = publicRoute<Ctx>(async (req, { params }) => {
-  const store = await getActiveStore((await params).store)
+  const slug = (await params).store
+  if (slug === PREVIEW_STORE) return cors(ok({ products: [], total: 0, page: 1, limit: 0 }))
+  const store = await getActiveStore(slug)
   const q = searchParams(req)
   const { take, skip, page, limit } = pagination(q, 48)
   const search = q.get('search')?.trim()

@@ -19,6 +19,9 @@ export function cors(response: Response) {
   return response
 }
 
+/** Virtual store used to preview themes before any real store exists (empty catalogue). */
+export const PREVIEW_STORE = '_preview'
+
 export async function getActiveStore(slug: string) {
   const store = await db.store.findUnique({ where: { slug }, include: { plan: true } })
   if (!store || store.status !== 'ACTIVE') throw notFound('Store')
@@ -66,6 +69,7 @@ export async function storefrontBootstrap(
   slug: string,
   opts: { mode: Mode; installId?: string | null; theme?: string | null; version?: string | null }
 ) {
+  if (slug === PREVIEW_STORE) return previewBootstrap(opts)
   const store = await getActiveStore(slug)
   const settings = parseStoreSettings(store.settings)
   const { version, content } = await resolveThemeContext(store.id, opts)
@@ -110,6 +114,23 @@ export async function storefrontBootstrap(
     districts: DISTRICTS,
     categories: categories.map((c) => ({ name: c.category, count: c._count })),
     allowedMethods: payments.map((p) => p.method),
+  }
+}
+
+async function previewBootstrap(opts: { theme?: string | null; version?: string | null }) {
+  const version = opts.theme && opts.version ? await db.themeVersion.findFirst({ where: { version: opts.version, theme: { slug: opts.theme } }, include: { theme: true } }) : null
+  if (!version) throw notFound('Theme version')
+  return {
+    store: { name: version.theme.name, slug: PREVIEW_STORE, phone: '', email: '', address: null, city: 'Dhaka', language: 'en', currency: 'BDT' as const },
+    theme: { features: version.features, version: version.version },
+    plan: { key: 'business', features: version.features },
+    content: version.defaults,
+    payments: [{ method: 'COD' as const, label: PAYMENT_LABELS.COD }],
+    cod: { fee: 0, maxAmount: 0 },
+    shipping: { zones: [], freeShippingOver: null },
+    districts: DISTRICTS,
+    categories: [],
+    allowedMethods: [] as string[],
   }
 }
 

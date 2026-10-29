@@ -48,11 +48,8 @@ NEXTAUTH_SECRET=<openssl rand -base64 32>
 ENCRYPTION_KEY=<openssl rand -base64 32>       # never change after payment secrets are saved
 STORAGE_DRIVER=local
 THEME_MAX_ZIP_MB=80
-SEED_ADMIN_EMAIL=you@example.com
-SEED_ADMIN_PASSWORD=<strong password>
-RUN_SEED=true                                  # first deploy only, then set to false
-SEED_DEMO=false                                # true = also create demo stores/orders + demo logins
-DEMO_MODE=false                                # true = one-click demo logins on the sign-in page
+SEED_ADMIN_EMAIL=                              # optional — otherwise create the first admin on /setup
+SEED_ADMIN_PASSWORD=
 STOREFRONT_ROOT_DOMAIN=shops.example.com       # optional, see step 3
 MARKETPLACE_WEBHOOK_URL=                       # optional, NexDrop marketplace sync
 MARKETPLACE_WEBHOOK_SECRET=
@@ -61,12 +58,8 @@ MARKETPLACE_WEBHOOK_SECRET=
 5. Domains: `https://admin.example.com`. Deploy.
 
 On every start, the container runs `prisma migrate deploy` (applies new migrations, otherwise does
-nothing) and then starts the server. After the first successful deploy, set `RUN_SEED=false`.
-
-### Public demo server
-
-For a demo instance, set `DEMO_MODE=true`, `SEED_DEMO=true` and `RUN_SEED=true`, and leave them on.
-Every restart then re-applies the demo logins (password `Demo@12345`). Use a separate database or schema from production.
+nothing), seeds system data (plans — idempotent) and starts the server. On the first visit, `/setup`
+asks you to create the first super admin.
 
 ## 3. Storefront subdomains (optional)
 
@@ -74,7 +67,7 @@ Every restart then re-applies the demo logins (password `Demo@12345`). Use a sep
 2. Add `https://*.shops.example.com` to the app's domains in Coolify. Wildcard TLS needs a DNS challenge;
    see Coolify's "wildcard certificate" docs. You can start without it: stores are also reachable at
    `https://admin.example.com/s/<store>/`.
-3. Set `STOREFRONT_ROOT_DOMAIN=shops.example.com`. `demo.shops.example.com` then serves the demo store.
+3. Set `STOREFRONT_ROOT_DOMAIN=shops.example.com`. `my-store.shops.example.com` then serves the store with slug `my-store`.
 
 Keep storefronts on a **different domain** from the admin, so theme JavaScript can never read admin cookies.
 

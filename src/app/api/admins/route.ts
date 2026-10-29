@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { audit } from '@/lib/audit'
-import { assertNotDemo, hashPassword, requireAdmin } from '@/lib/auth'
+import { hashPassword, requireAdmin } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { ok, route } from '@/lib/http'
 
@@ -21,7 +21,6 @@ const input = z.object({
 
 export const POST = route(async (req) => {
   const actor = await requireAdmin('SUPER_ADMIN')
-  assertNotDemo(actor, 'Adding team members')
   const { password, ...data } = input.parse(await req.json())
   const admin = await db.adminUser.create({ data: { ...data, passwordHash: await hashPassword(password) }, select })
   await audit(actor.id, 'admin.create', 'admin', admin.id, { role: admin.role })

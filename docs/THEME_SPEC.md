@@ -197,7 +197,7 @@ The SDK's `useCheckout().paymentMethods` and `useFeature()` already apply this r
 // main.tsx
 <NexdropProvider
   fallbackContent={defaults}                         // your defaults/content.json
-  devConfig={{ store: 'demo', apiBase: 'http://localhost:3000/api/storefront/demo' }}
+  devConfig={{ store: 'my-store', apiBase: 'http://localhost:3000/api/storefront/my-store' }}
   pagePaths={{ home: '/', collection: '/collection/all', product: '/product/:first', cart: '/cart', checkout: '/checkout' }}
 >
   <App />
@@ -226,7 +226,7 @@ function Hero({ settings }) {
 6. Don't rely on `localStorage` or cookies in previews: the editor preview runs sandboxed (the SDK handles this for the cart and locale).
 
 **Local development:** run the admin on `:3000`, then `npm run dev` in the theme.
-The SDK loads the real products of store `demo` and falls back to your `defaults/content.json`.
+The SDK loads the real products of the store in `devConfig` and falls back to your `defaults/content.json`.
 
 **Publishing:** `npm run package` builds and zips the theme. Then go to Admin → Themes → Upload theme.
 

@@ -15,27 +15,12 @@ served as storefronts.
 ## Quick start
 
 ```bash
-cp .env.example .env            # set DATABASE_URL, NEXTAUTH_SECRET, ENCRYPTION_KEY, SEED_ADMIN_PASSWORD
+cp .env.example .env            # set DATABASE_URL (any Postgres / Supabase)
 npm install
 npx prisma migrate deploy
-npm run db:seed                 # plans, super admin, 3 demo stores with 12 months of orders
-npm run dev                     # http://localhost:3000
+npm run db:seed                 # system data: subscription plans
+npm run dev                     # http://localhost:3000 → /setup creates the first super admin
 ```
-
-### Demo logins
-
-Demo mode is **on by default** during the test phase. After `npm run db:seed`, the sign-in page shows one-click logins
-(password `Demo@12345` for all):
-
-| Account | Role | Can test |
-| --- | --- | --- |
-| `demo.superadmin@nexdrop.app` | Super admin | everything: stores, plans, themes, all settings |
-| `demo.themes@nexdrop.app` | Theme manager | upload, review, publish and release themes |
-| `demo.support@nexdrop.app` | Support | orders, products, customers, store settings, theme customization |
-
-Demo accounts can't change passwords, manage the team or delete themes, so testers can't lock each other out.
-With `DEMO_MODE=false` the buttons disappear and these accounts **can't sign in at all**.
-Re-running the seed resets their passwords and roles. Accounts are defined in `src/lib/demo.ts`.
 
 Try the theme flow:
 
@@ -43,8 +28,8 @@ Try the theme flow:
 cd themes/lumiere && npm install && npm run package   # → lumiere-fashion-1.0.0.zip
 ```
 
-Then go to Admin → Themes → **Upload theme**, publish it, pick the *Dokanio Fashion House* store,
-**Add to store**, customize it and **Publish**. The live store is at `/s/demo/`.
+Then create a store (Stores → New Store), go to Themes → **Upload theme**, publish it,
+**Add to store**, customize it and **Publish**. The live store is at `/s/<store-slug>/`.
 
 ## Structure
 
@@ -71,10 +56,10 @@ prisma/                schema, migrations, seed
 | `THEME_MANAGER` | upload, review, publish and release themes |
 | `SUPPORT` | stores, orders, products, customers, store settings, theme customization |
 
-## Test deployment (GitHub → Vercel)
+## Deploy (GitHub → Vercel + Supabase)
 
-Import the repo in Vercel and set `DATABASE_URL` + `DIRECT_URL` (Supabase).
-Demo logins, file storage and secrets have test-phase defaults.
+Connect Supabase to the Vercel project (Storage → Supabase) — the database URLs are picked up automatically.
+Set `NEXTAUTH_SECRET` and `ENCRYPTION_KEY`, push, then open the site and create the first admin on `/setup`.
 See [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md).
 
 ## Production (VPS: Coolify + Supabase)

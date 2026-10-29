@@ -27,8 +27,3 @@ export function encryptionKey(): Buffer {
   if (buf.length !== 32) throw new Error('ENCRYPTION_KEY must be 32 bytes, base64 encoded')
   return buf
 }
-
-/** Demo logins are ON unless DEMO_MODE=false (test phase default). */
-export function isDemoMode() {
-  return process.env.DEMO_MODE !== 'false'
-}

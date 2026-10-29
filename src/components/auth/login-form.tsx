@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Loader2 } from 'lucide-react'
@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export type DemoAccount = { email: string; password: string; label: string; description: string }
-
-export function LoginForm({ demoAccounts = [] }: { demoAccounts?: DemoAccount[] }) {
+export function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
   const [error, setError] = useState('')
@@ -19,12 +17,12 @@ export function LoginForm({ demoAccounts = [] }: { demoAccounts?: DemoAccount[] 
   const [ready, setReady] = useState(false)
   useEffect(() => setReady(true), [])
 
-  const formRef = useRef<HTMLFormElement>(null)
-
-  async function login(email: string, password: string) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = new FormData(e.currentTarget)
     setBusy(true)
     setError('')
-    const res = await signIn('credentials', { email, password, redirect: false })
+    const res = await signIn('credentials', { email: form.get('email'), password: form.get('password'), redirect: false })
     setBusy(false)
     if (res?.error) {
       setError('Incorrect email or password')
@@ -35,24 +33,8 @@ export function LoginForm({ demoAccounts = [] }: { demoAccounts?: DemoAccount[] 
     router.refresh()
   }
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const form = new FormData(e.currentTarget)
-    login(String(form.get('email')), String(form.get('password')))
-  }
-
-  function signInAsDemo(account: DemoAccount) {
-    const form = formRef.current
-    if (form) {
-      ;(form.elements.namedItem('email') as HTMLInputElement).value = account.email
-      ;(form.elements.namedItem('password') as HTMLInputElement).value = account.password
-    }
-    login(account.email, account.password)
-  }
-
   return (
-    <>
-    <form ref={formRef} onSubmit={onSubmit} method="post" className="space-y-4">
+    <form onSubmit={onSubmit} method="post" className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="username" required autoFocus />
@@ -67,30 +49,5 @@ export function LoginForm({ demoAccounts = [] }: { demoAccounts?: DemoAccount[] 
         Sign in
       </Button>
     </form>
-    {demoAccounts.length > 0 && (
-      <div className="mt-6 space-y-2 border-t pt-5">
-        <p className="text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">Try the demo</p>
-        {demoAccounts.map((a) => (
-          <button
-            key={a.email}
-            type="button"
-            disabled={busy || !ready}
-            onClick={() => signInAsDemo(a)}
-            className="flex w-full items-center justify-between gap-3 rounded-lg border bg-white/60 px-3 py-2 text-left transition hover:bg-white disabled:opacity-50"
-          >
-            <span>
-              <span className="block text-sm font-medium">{a.label}</span>
-              <span className="block text-[11px] text-muted-foreground">{a.description}</span>
-            </span>
-            <span className="text-right font-mono text-[10px] leading-tight text-muted-foreground">
-              {a.email}
-              <br />
-              {a.password}
-            </span>
-          </button>
-        ))}
-      </div>
-    )}
-    </>
   )
 }

@@ -9,8 +9,8 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <NexdropProvider
       fallbackContent={defaults as ThemeContent}
-      // Used only during `npm run dev` — when uploaded, NexDrop injects the real config.
-      devConfig={{ store: 'demo', apiBase: 'http://localhost:3000/api/storefront/demo' }}
+      // Used only during `npm run dev` (point it at one of your stores) — when uploaded, NexDrop injects the real config.
+      devConfig={{ store: 'my-store', apiBase: 'http://localhost:3000/api/storefront/my-store' }}
       pagePaths={{ home: '/', collection: '/collection/all', product: '/product/:first', cart: '/cart', checkout: '/checkout' }}
     >
       <App />

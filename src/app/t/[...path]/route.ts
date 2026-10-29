@@ -1,16 +1,16 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { isStorefrontHost, serveThemeFile, themeBaseUrl, trailingSlashRedirect } from '@/server/storefront'
+import { isStorefrontHost, PREVIEW_STORE, serveThemeFile, themeBaseUrl, trailingSlashRedirect } from '@/server/storefront'
 
 type Ctx = { params: Promise<{ path: string[] }> }
 
-const DEMO_STORE = process.env.DEMO_STORE_SLUG || 'demo'
 
 /**
  * Theme preview: /t/{theme}/{version}/…
  *   ?store=<slug>&install=<id>&mode=editor  → editor preview of a store's draft
- *   (no params)                             → demo preview with the theme's default content
+ *   (no params)                             → the theme's default content with the first active store's products
+ *                                             (or an empty catalogue before any store exists)
  * Unpublished themes are only previewable by signed-in admins.
  */
 export async function GET(req: Request, { params }: Ctx) {
@@ -31,7 +31,10 @@ export async function GET(req: Request, { params }: Ctx) {
   }
 
   const mode = url.searchParams.get('mode') === 'editor' ? 'editor' : 'preview'
-  const store = url.searchParams.get('store') || DEMO_STORE
+  const store =
+    url.searchParams.get('store') ||
+    (await db.store.findFirst({ where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { slug: true } }))?.slug ||
+    PREVIEW_STORE
   const install = url.searchParams.get('install')
   const base = themeBaseUrl(slug, version)
   const query = new URLSearchParams({ mode, ...(install ? { install } : { theme: slug, version }) })

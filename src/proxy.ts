@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { authSecret } from '@/lib/secrets'
 
-const PUBLIC_PREFIXES = ['/login', '/api/', '/t/', '/s/', '/media/', '/_next/', '/favicon', '/logo.svg', '/robots.txt', '/themes/']
+const PUBLIC_PREFIXES = ['/login', '/setup', '/api/', '/t/', '/s/', '/media/', '/_next/', '/favicon', '/logo.svg', '/robots.txt', '/themes/']
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl

@@ -16,7 +16,6 @@ import { SidebarNav } from '@/components/dashboard/sidebar-nav'
 import { useIsDesktop } from '@/hooks/use-media-query'
 import { useStoreScope } from '@/hooks/use-store-scope'
 import { api } from '@/lib/api'
-import { isDemoEmail } from '@/lib/demo'
 import { timeAgo } from '@/lib/format'
 import type { NotificationItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -74,14 +73,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1">
-        {isDemoEmail(session?.user?.email) && (
-          <span
-            className="mr-1 hidden rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 sm:inline"
-            title="Shared demo account: password and team changes are disabled"
-          >
-            Demo account
-          </span>
-        )}
         <Notifications />
 
         <DropdownMenu>

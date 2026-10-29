@@ -146,7 +146,7 @@ export function NexdropProvider({ children, fallbackContent, devConfig, pagePath
   const config = useMemo<NexdropConfig>(() => {
     const injected = typeof window !== 'undefined' ? window.__NEXDROP_CONFIG__ : undefined
     if (injected) return injected
-    const store = devConfig?.store || 'demo'
+    const store = devConfig?.store || 'my-store'
     const apiBase = devConfig?.apiBase || `http://localhost:3000/api/storefront/${store}`
     return {
       mode: 'preview',

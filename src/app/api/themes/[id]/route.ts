@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { assertNotDemo, requireAdmin } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 import { ok, route } from '@/lib/http'
 import { deleteTheme, getTheme, updateTheme } from '@/server/themes'
 
@@ -28,7 +28,6 @@ export const PATCH = route<Ctx>(async (req, { params }) => {
 
 export const DELETE = route<Ctx>(async (_req, { params }) => {
   const admin = await requireAdmin('SUPER_ADMIN')
-  assertNotDemo(admin, 'Deleting themes')
   await deleteTheme((await params).id, admin.id)
   return ok({ ok: true })
 })
