@@ -7,8 +7,10 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { isDemoEmail } from '@/lib/demo'
 import { HttpError } from '@/lib/http'
+import { authSecret, isDemoMode } from '@/lib/secrets'
 
 export const authOptions: NextAuthOptions = {
+  secret: authSecret(),
   session: { strategy: 'jwt', maxAge: 60 * 60 * 12 },
   pages: { signIn: '/login' },
   providers: [
@@ -19,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         const parsed = z.object({ email: z.string().email(), password: z.string().min(1) }).safeParse(raw)
         if (!parsed.success) return null
         // Demo accounts only work while DEMO_MODE is on — never a known-password backdoor in production.
-        if (isDemoEmail(parsed.data.email) && process.env.DEMO_MODE !== 'true') return null
+        if (isDemoEmail(parsed.data.email) && !isDemoMode()) return null
         const user = await db.adminUser.findUnique({ where: { email: parsed.data.email.toLowerCase() } })
         if (!user || !user.isActive) return null
         if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return null

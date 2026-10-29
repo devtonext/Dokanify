@@ -3,12 +3,13 @@ import { LoginForm } from '@/components/auth/login-form'
 import { IconLogo } from '@/components/icons'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DEMO_ACCOUNTS } from '@/lib/demo'
+import { isDemoMode } from '@/lib/secrets'
 
 // Reads DEMO_MODE at request time, not build time.
 export const dynamic = 'force-dynamic'
 
 export default function LoginPage() {
-  const demoAccounts = process.env.DEMO_MODE === 'true' ? DEMO_ACCOUNTS.map(({ email, password, label, description }) => ({ email, password, label, description })) : []
+  const demoAccounts = isDemoMode() ? DEMO_ACCOUNTS.map(({ email, password, label, description }) => ({ email, password, label, description })) : []
   return (
     <div className="relative grid h-screen place-items-center overflow-hidden bg-slate-50 p-4">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">

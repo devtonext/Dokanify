@@ -337,3 +337,12 @@ model MediaAsset {
 
   @@index([storeId])
 }
+
+// Files (theme builds, uploaded images) when STORAGE_DRIVER=db — zero-config storage for Vercel/test setups.
+model StorageObject {
+  key         String   @id
+  contentType String
+  size        Int
+  data        Bytes
+  createdAt   DateTime @default(now())
+}

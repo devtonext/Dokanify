@@ -1,15 +1,10 @@
 import 'server-only'
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
+import { encryptionKey } from '@/lib/secrets'
 
 const PREFIX = 'enc:v1:'
 
-function key() {
-  const raw = process.env.ENCRYPTION_KEY
-  if (!raw) throw new Error('ENCRYPTION_KEY is not configured')
-  const buf = Buffer.from(raw, 'base64')
-  if (buf.length !== 32) throw new Error('ENCRYPTION_KEY must be 32 bytes, base64 encoded')
-  return buf
-}
+const key = encryptionKey
 
 export function encryptSecret(plain: string) {
   if (!plain) return ''

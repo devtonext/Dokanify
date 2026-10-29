@@ -2,6 +2,8 @@
  * Object storage abstraction.
  *  - local: ./storage on disk — development, or a VPS with a persistent volume (not serverless)
  *  - s3:    Supabase Storage (S3 protocol) / MinIO / Cloudflare R2 / AWS S3
+ *  - db:    rows in Postgres (StorageObject) — zero-config, default on Vercel. Fine for testing and
+ *           small catalogues; move to s3 for heavy traffic.
  */
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
@@ -15,6 +17,8 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { db } from '@/lib/db'
+import { authSecret } from '@/lib/secrets'
 
 export interface StoredObject {
   body: Uint8Array
@@ -25,6 +29,7 @@ interface StorageDriver {
   put(key: string, body: Uint8Array, contentType: string): Promise<void>
   get(key: string): Promise<StoredObject | null>
   deletePrefix(prefix: string): Promise<void>
+  delete(key: string): Promise<void>
   /** URL the browser can PUT a file to directly (bypasses serverless body limits). */
   presignPut(key: string, contentType: string): Promise<string>
   /** Public URL for media (images uploaded in the editor). */
@@ -42,7 +47,7 @@ export function assertSafeKey(key: string) {
 const LOCAL_ROOT = join(process.cwd(), 'storage')
 
 function localSignature(key: string, expires: number) {
-  return createHmac('sha256', process.env.NEXTAUTH_SECRET || 'dev').update(`${key}:${expires}`).digest('hex')
+  return createHmac('sha256', authSecret() || 'dev').update(`${key}:${expires}`).digest('hex')
 }
 
 export function verifyLocalUploadToken(key: string, expires: number, sig: string) {
@@ -80,6 +85,11 @@ const localDriver: StorageDriver = {
   async deletePrefix(prefix) {
     assertSafeKey(prefix)
     await rm(join(LOCAL_ROOT, prefix), { recursive: true, force: true })
+  },
+  async delete(key) {
+    assertSafeKey(key)
+    const path = normalize(join(LOCAL_ROOT, key))
+    await Promise.all([rm(path, { force: true }), rm(contentTypeFile(path), { force: true })])
   },
   async presignPut(key) {
     assertSafeKey(key)
@@ -148,6 +158,10 @@ const s3Driver: StorageDriver = {
       token = page.IsTruncated ? page.NextContinuationToken : undefined
     } while (token)
   },
+  async delete(key) {
+    assertSafeKey(key)
+    await client().send(new DeleteObjectsCommand({ Bucket: bucket(), Delete: { Objects: [{ Key: key }] } }))
+  },
   async presignPut(key, contentType) {
     assertSafeKey(key)
     return getSignedUrl(client(), new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType }), {
@@ -160,5 +174,37 @@ const s3Driver: StorageDriver = {
   },
 }
 
-export const storage: StorageDriver = process.env.STORAGE_DRIVER === 's3' ? s3Driver : localDriver
-export const isLocalStorage = process.env.STORAGE_DRIVER !== 's3'
+// ─── db (Postgres) ───────────────────────────────────────────────────────────
+
+const dbDriver: StorageDriver = {
+  async put(key, body, contentType) {
+    assertSafeKey(key)
+    const data = new Uint8Array(body)
+    await db.storageObject.upsert({
+      where: { key },
+      create: { key, contentType, size: data.byteLength, data },
+      update: { contentType, size: data.byteLength, data },
+    })
+  },
+  async get(key) {
+    assertSafeKey(key)
+    const row = await db.storageObject.findUnique({ where: { key } })
+    return row ? { body: new Uint8Array(row.data), contentType: row.contentType } : null
+  },
+  async deletePrefix(prefix) {
+    assertSafeKey(prefix)
+    await db.storageObject.deleteMany({ where: { key: { startsWith: prefix } } })
+  },
+  async delete(key) {
+    assertSafeKey(key)
+    await db.storageObject.deleteMany({ where: { key } })
+  },
+  presignPut: localDriver.presignPut,
+  publicUrl: localDriver.publicUrl,
+}
+
+/** STORAGE_DRIVER=local|s3|db. Default: db on Vercel (no persistent disk), local elsewhere. */
+export const storageDriver = process.env.STORAGE_DRIVER || (process.env.VERCEL ? 'db' : 'local')
+export const storage: StorageDriver = storageDriver === 's3' ? s3Driver : storageDriver === 'db' ? dbDriver : localDriver
+/** Uploads go through /api/uploads/direct (signed, chunked) instead of an S3 presigned URL. */
+export const usesDirectUploads = storageDriver !== 's3'

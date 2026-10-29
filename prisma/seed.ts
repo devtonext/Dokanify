@@ -134,16 +134,19 @@ async function main() {
 
   const email = (process.env.SEED_ADMIN_EMAIL || 'admin@nexdrop.app').toLowerCase()
   const password = process.env.SEED_ADMIN_PASSWORD
-  if (!password || password.length < 10) throw new Error('Set SEED_ADMIN_PASSWORD (min 10 chars) before seeding')
-  await db.adminUser.upsert({
-    where: { email },
-    create: { email, name: 'Super Admin', role: 'SUPER_ADMIN', passwordHash: await bcrypt.hash(password, 12) },
-    update: {},
-  })
-  console.log(`✔ super admin: ${email}`)
+  if (password && password.length >= 10) {
+    await db.adminUser.upsert({
+      where: { email },
+      create: { email, name: 'Super Admin', role: 'SUPER_ADMIN', passwordHash: await bcrypt.hash(password, 12) },
+      update: {},
+    })
+    console.log(`✔ super admin: ${email}`)
+  } else {
+    console.log('… SEED_ADMIN_PASSWORD not set (min 10 chars) — skipping the real super admin; demo logins still work')
+  }
 
   // Demo logins (one per role). They can only sign in while DEMO_MODE=true.
-  if (process.env.SEED_DEMO !== 'false' || process.env.DEMO_MODE === 'true') {
+  if (process.env.SEED_DEMO !== 'false' || process.env.DEMO_MODE !== 'false') {
     for (const a of DEMO_ACCOUNTS) {
       const passwordHash = await bcrypt.hash(a.password, 12)
       // Always reset: testers can't permanently break a demo account.

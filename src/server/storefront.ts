@@ -182,7 +182,7 @@ export async function serveThemeFile(opts: {
   }
 
   // Versions are immutable → cache forever.
-  headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+  headers['Cache-Control'] = 'public, max-age=31536000, s-maxage=31536000, immutable'
   if (opts.sandboxed && headers['Content-Type'].startsWith('text/html')) headers['Content-Security-Policy'] = ADMIN_SANDBOX
   return new Response(file.body as BodyInit, { headers })
 }

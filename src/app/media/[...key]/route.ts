@@ -16,7 +16,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   return new Response(file.body as BodyInit, {
     headers: {
       'Content-Type': file.contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
       'X-Content-Type-Options': 'nosniff',
       'Content-Security-Policy': "default-src 'none'; sandbox",
       'Access-Control-Allow-Origin': '*',

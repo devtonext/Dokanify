@@ -24,7 +24,7 @@ npm run dev                     # http://localhost:3000
 
 ### Demo logins
 
-Set `DEMO_MODE=true` and run `npm run db:seed`. The sign-in page then shows one-click logins
+Demo mode is **on by default** during the test phase. After `npm run db:seed`, the sign-in page shows one-click logins
 (password `Demo@12345` for all):
 
 | Account | Role | Can test |
@@ -70,6 +70,12 @@ prisma/                schema, migrations, seed
 | `SUPER_ADMIN` | everything, including plans, team, store plan/status, deleting themes, and the audit log |
 | `THEME_MANAGER` | upload, review, publish and release themes |
 | `SUPPORT` | stores, orders, products, customers, store settings, theme customization |
+
+## Test deployment (GitHub → Vercel)
+
+Import the repo in Vercel and set `DATABASE_URL` + `DIRECT_URL` (Supabase).
+Demo logins, file storage and secrets have test-phase defaults.
+See [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md).
 
 ## Production (VPS: Coolify + Supabase)
 

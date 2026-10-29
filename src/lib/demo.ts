@@ -1,6 +1,6 @@
 /**
  * Demo accounts for trying the whole system, one per role.
- * Shown on the login page only when DEMO_MODE=true. Created by `npm run db:seed`.
+ * Shown on the login page unless DEMO_MODE=false (on by default during the test phase). Created by `npm run db:seed`.
  * Demo users can use everything except actions that could lock other testers out
  * (changing passwords, managing the team, deleting themes).
  */

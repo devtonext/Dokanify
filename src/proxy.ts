@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { authSecret } from '@/lib/secrets'
 
 const PUBLIC_PREFIXES = ['/login', '/api/', '/t/', '/s/', '/media/', '/_next/', '/favicon', '/logo.svg', '/robots.txt', '/themes/']
 
@@ -19,7 +20,7 @@ export async function proxy(req: NextRequest) {
   // API routes and public assets do their own auth.
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next()
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const token = await getToken({ req, secret: authSecret() })
   if (!token) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'

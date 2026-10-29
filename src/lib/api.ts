@@ -35,17 +35,48 @@ export function qs(params: Record<string, string | number | boolean | null | und
   return s ? `?${s}` : ''
 }
 
-/** Uploads a file straight to storage through a presigned URL. */
-export async function putFile(uploadUrl: string, file: Blob, contentType: string, onProgress?: (pct: number) => void) {
-  await new Promise<void>((resolve, reject) => {
+const CHUNK = 3 * 1024 * 1024
+
+function putOnce(url: string, body: Blob, contentType: string, onProgress?: (loaded: number) => void) {
+  return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('PUT', uploadUrl)
+    xhr.open('PUT', url)
     xhr.setRequestHeader('Content-Type', contentType)
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(Math.round((e.loaded / e.total) * 100))
-    xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`)))
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded)
+    xhr.onload = () => {
+      if (xhr.status < 300) return resolve()
+      let message = `Upload failed (${xhr.status})`
+      try {
+        message = JSON.parse(xhr.responseText).error || message
+      } catch {
+        /* not JSON */
+      }
+      reject(new Error(message))
+    }
     xhr.onerror = () => reject(new Error('Upload failed — check your connection'))
-    xhr.send(file)
+    xhr.send(body)
   })
+}
+
+/**
+ * Uploads a file straight to storage. S3/R2 presigned URLs take the whole file;
+ * our own /api/uploads/direct endpoint takes 3 MB chunks (serverless body limits).
+ */
+export async function putFile(uploadUrl: string, file: Blob, contentType: string, onProgress?: (pct: number) => void) {
+  const direct = uploadUrl.startsWith('/api/uploads/direct')
+  if (!direct || file.size <= CHUNK) {
+    await putOnce(uploadUrl, file, contentType, (loaded) => onProgress?.(Math.round((loaded / file.size) * 100)))
+    onProgress?.(100)
+    return
+  }
+  const parts = Math.ceil(file.size / CHUNK)
+  for (let i = 0; i < parts; i++) {
+    const chunk = file.slice(i * CHUNK, Math.min(file.size, (i + 1) * CHUNK))
+    await putOnce(`${uploadUrl}&part=${i}&parts=${parts}`, chunk, contentType, (loaded) =>
+      onProgress?.(Math.round(((i * CHUNK + loaded) / file.size) * 100))
+    )
+  }
+  onProgress?.(100)
 }
 
 export async function uploadImage(file: File, storeId?: string) {

@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/auth'
 import { ok, route } from '@/lib/http'
 import { importThemeFromUpload } from '@/server/themes'
 
-export const maxDuration = 120
+export const maxDuration = 60
 
 /** Step 2: validate the uploaded zip and import it as a theme version. */
 export const POST = route(async (req) => {
