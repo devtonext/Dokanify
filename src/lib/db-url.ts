@@ -14,6 +14,12 @@ export function resolveDatabaseUrls(env: Record<string, string | undefined> = pr
       'DATABASE_URL is not set. Add it in Vercel → Project → Settings → Environment Variables (Supabase → Connect → ORMs → Prisma).'
     )
   }
+  if (/\[YOUR-PASSWORD\]|YOUR[-_]PASSWORD|<PASSWORD>/i.test(raw)) {
+    throw new Error('DATABASE_URL still contains the password placeholder — replace [YOUR-PASSWORD] (including the brackets) with your real database password.')
+  }
+  if (/\s/.test(raw)) {
+    throw new Error('DATABASE_URL contains a space or line break — re-paste it without extra whitespace.')
+  }
   const serverless = Boolean(env.VERCEL)
 
   const pooled = parse(raw, 'DATABASE_URL')
