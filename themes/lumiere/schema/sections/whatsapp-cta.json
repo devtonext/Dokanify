@@ -1,0 +1,11 @@
+{
+  "type": "whatsapp-cta",
+  "label": "WhatsApp order banner",
+  "description": "Many Bangladeshi customers prefer ordering on WhatsApp",
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "text", "type": "text", "label": "Text", "localized": true },
+    { "key": "buttonLabel", "type": "text", "label": "Button label", "localized": true },
+    { "key": "message", "type": "text", "label": "Pre-filled message", "localized": true }
+  ]
+}

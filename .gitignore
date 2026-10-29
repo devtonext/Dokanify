@@ -52,3 +52,10 @@ server.log
 # local storage driver
 /storage
 !.env.example
+
+# themes
+themes/*/node_modules
+themes/*/dist
+themes/*/*.zip
+packages/*/node_modules
+packages/*/dist

@@ -1,0 +1,23 @@
+{
+  "type": "promo-banner",
+  "label": "Promo banner",
+  "fields": [
+    { "key": "image", "type": "image", "label": "Image" },
+    { "key": "eyebrow", "type": "text", "label": "Small label", "localized": true },
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "text", "type": "textarea", "label": "Text", "localized": true },
+    { "key": "buttonLabel", "type": "text", "label": "Button label", "localized": true },
+    { "key": "buttonLink", "type": "link", "label": "Button link" },
+    {
+      "key": "layout",
+      "type": "select",
+      "label": "Image position",
+      "default": "left",
+      "options": [
+        { "value": "left", "label": "Image left" },
+        { "value": "right", "label": "Image right" }
+      ]
+    },
+    { "key": "background", "type": "color", "label": "Background", "default": "#f3ece3" }
+  ]
+}

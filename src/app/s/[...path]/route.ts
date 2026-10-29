@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { isStorefrontHost, serveThemeFile } from '@/server/storefront'
+import { isStorefrontHost, serveThemeFile, trailingSlashRedirect } from '@/server/storefront'
 
 type Ctx = { params: Promise<{ path: string[] }> }
 
@@ -29,12 +29,15 @@ export async function GET(req: Request, { params }: Ctx) {
     })
   }
   const onStoreHost = isStorefrontHost(req.headers.get('host'))
+  if (!onStoreHost) {
+    const redirect = trailingSlashRedirect(req, rest.length === 0)
+    if (redirect) return redirect
+  }
   const base = onStoreHost ? '/' : `/s/${storeSlug}/`
   return serveThemeFile({
     slug: live.theme.slug,
     version: live.publishedVersion.version,
     path: rest.join('/'),
-    basePath: base,
     sandboxed: !onStoreHost,
     config: {
       mode: 'live',

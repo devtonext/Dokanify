@@ -1,0 +1,209 @@
+{
+  "settings": {
+    "colorPrimary": "#1f2937",
+    "colorAccent": "#b45309",
+    "colorBackground": "#fbf8f4",
+    "colorText": "#1c1917",
+    "fontHeading": "Playfair Display",
+    "fontBody": "Inter",
+    "fontBangla": "Hind Siliguri",
+    "radius": 8,
+    "logo": "",
+    "logoWidth": 120,
+    "menu": [
+      { "label": { "en": "New in", "bn": "নতুন" }, "link": "/collection/all" },
+      { "label": { "en": "Men", "bn": "পুরুষ" }, "link": "/collection/Men's Wear" },
+      { "label": { "en": "Women", "bn": "নারী" }, "link": "/collection/Women's Wear" },
+      { "label": { "en": "Kids", "bn": "শিশু" }, "link": "/collection/Kids Wear" }
+    ],
+    "stickyHeader": true,
+    "announcementEnabled": true,
+    "announcementText": { "en": "Free delivery inside Dhaka on orders over ৳5,000 · Cash on delivery available", "bn": "ঢাকার ভেতরে ৳৫,০০০+ অর্ডারে ফ্রি ডেলিভারি · ক্যাশ অন ডেলিভারি" },
+    "announcementLink": "/collection/all",
+    "announcementBg": "#1f2937",
+    "footerAbout": { "en": "Handpicked traditional and modern clothing, delivered anywhere in Bangladesh.", "bn": "বাছাই করা ঐতিহ্যবাহী ও আধুনিক পোশাক, সারা বাংলাদেশে ডেলিভারি।" },
+    "footerLinks": [
+      { "label": { "en": "Shop all", "bn": "সব পণ্য" }, "link": "/collection/all" },
+      { "label": { "en": "Track order", "bn": "অর্ডার ট্র্যাক" }, "link": "/track" },
+      { "label": { "en": "Cart", "bn": "কার্ট" }, "link": "/cart" }
+    ],
+    "showPaymentIcons": true,
+    "copyright": { "en": "All rights reserved.", "bn": "সর্বস্বত্ব সংরক্ষিত।" },
+    "facebook": "https://facebook.com",
+    "instagram": "",
+    "youtube": "",
+    "whatsapp": "01712345678"
+  },
+  "pages": {
+    "home": {
+      "sections": [
+        {
+          "id": "hero-main",
+          "type": "hero",
+          "settings": {
+            "slides": [
+              {
+                "image": "images/hero-1.jpg",
+                "heading": { "en": "The Eid Collection", "bn": "ঈদ কালেকশন" },
+                "subheading": { "en": "Premium cotton Panjabi, handloom sarees and festive three-pieces.", "bn": "প্রিমিয়াম কটন পাঞ্জাবি, তাঁতের শাড়ি ও উৎসবের থ্রি-পিস।" },
+                "buttonLabel": { "en": "Shop the collection", "bn": "কালেকশন দেখুন" },
+                "buttonLink": "/collection/all"
+              },
+              {
+                "image": "images/hero-2.jpg",
+                "heading": { "en": "Made for every day", "bn": "প্রতিদিনের জন্য" },
+                "subheading": { "en": "Breathable fabrics for Bangladeshi summers.", "bn": "বাংলাদেশের গরমের জন্য আরামদায়ক কাপড়।" },
+                "buttonLabel": { "en": "New arrivals", "bn": "নতুন পণ্য" },
+                "buttonLink": "/collection/all"
+              }
+            ],
+            "height": "large",
+            "align": "left",
+            "overlay": 35,
+            "autoplay": true
+          }
+        },
+        {
+          "id": "trust-main",
+          "type": "trust-badges",
+          "settings": {
+            "items": [
+              { "icon": "truck", "title": { "en": "Nationwide delivery", "bn": "সারাদেশে ডেলিভারি" }, "text": { "en": "1-2 days in Dhaka", "bn": "ঢাকায় ১-২ দিন" } },
+              { "icon": "cash", "title": { "en": "Cash on delivery", "bn": "ক্যাশ অন ডেলিভারি" }, "text": { "en": "Pay when you receive", "bn": "পণ্য হাতে পেয়ে টাকা দিন" } },
+              { "icon": "return", "title": { "en": "7-day exchange", "bn": "৭ দিনে এক্সচেঞ্জ" }, "text": { "en": "Size not right? Swap it", "bn": "সাইজ না মিললে বদলে নিন" } },
+              { "icon": "support", "title": { "en": "WhatsApp support", "bn": "হোয়াটসঅ্যাপ সাপোর্ট" }, "text": { "en": "10am – 10pm, every day", "bn": "প্রতিদিন সকাল ১০টা – রাত ১০টা" } }
+            ]
+          }
+        },
+        {
+          "id": "categories-main",
+          "type": "category-grid",
+          "settings": {
+            "heading": { "en": "Shop by category", "bn": "ক্যাটাগরি অনুযায়ী কিনুন" },
+            "columns": "4",
+            "categories": [
+              { "title": { "en": "Men", "bn": "পুরুষ" }, "image": "images/cat-men.jpg", "collection": "Men's Wear" },
+              { "title": { "en": "Women", "bn": "নারী" }, "image": "images/cat-women.jpg", "collection": "Women's Wear" },
+              { "title": { "en": "Kids", "bn": "শিশু" }, "image": "images/cat-kids.jpg", "collection": "Kids Wear" },
+              { "title": { "en": "Accessories", "bn": "এক্সেসরিজ" }, "image": "images/cat-accessories.jpg", "collection": "Accessories" }
+            ]
+          }
+        },
+        {
+          "id": "featured-new",
+          "type": "featured-products",
+          "settings": {
+            "heading": { "en": "New arrivals", "bn": "নতুন এসেছে" },
+            "collection": "all",
+            "sort": "newest",
+            "onSaleOnly": false,
+            "limit": 8,
+            "showViewAll": true
+          }
+        },
+        {
+          "id": "promo-main",
+          "type": "promo-banner",
+          "settings": {
+            "image": "images/promo.jpg",
+            "eyebrow": { "en": "Limited time", "bn": "সীমিত সময়" },
+            "heading": { "en": "Up to 25% off wedding sarees", "bn": "বিয়ের শাড়িতে ২৫% পর্যন্ত ছাড়" },
+            "text": { "en": "Jamdani and silk, hand-finished by artisans from Narayanganj.", "bn": "নারায়ণগঞ্জের কারিগরদের হাতে তৈরি জামদানি ও সিল্ক।" },
+            "buttonLabel": { "en": "Shop sarees", "bn": "শাড়ি দেখুন" },
+            "buttonLink": "/collection/Women's Wear",
+            "layout": "left",
+            "background": "#f3ece3"
+          }
+        },
+        {
+          "id": "featured-sale",
+          "type": "featured-products",
+          "settings": {
+            "heading": { "en": "On sale", "bn": "ছাড়ে পাচ্ছেন" },
+            "collection": "all",
+            "sort": "price-desc",
+            "onSaleOnly": true,
+            "limit": 4,
+            "showViewAll": false
+          }
+        },
+        {
+          "id": "reviews-main",
+          "type": "testimonials",
+          "settings": {
+            "heading": { "en": "Loved across Bangladesh", "bn": "সারা দেশের ক্রেতাদের ভালোবাসা" },
+            "items": [
+              { "quote": { "en": "The Panjabi fabric is excellent and delivery to Sylhet took only 3 days.", "bn": "পাঞ্জাবির কাপড় চমৎকার, সিলেটে মাত্র ৩ দিনে ডেলিভারি পেয়েছি।" }, "name": "Nasreen S.", "location": "Sylhet", "rating": 5 },
+              { "quote": { "en": "Paid with bKash, got my saree the next day in Dhanmondi. Beautiful work.", "bn": "বিকাশে পেমেন্ট করেছি, পরদিনই ধানমন্ডিতে শাড়ি পেয়েছি। অসাধারণ কাজ।" }, "name": "Fatima A.", "location": "Dhaka", "rating": 5 },
+              { "quote": { "en": "Exchanged a size without any hassle. Will order again for Eid.", "bn": "কোনো ঝামেলা ছাড়াই সাইজ বদলেছি। ঈদে আবার অর্ডার করব।" }, "name": "Jamil U.", "location": "Chattogram", "rating": 4 }
+            ]
+          }
+        },
+        {
+          "id": "whatsapp-main",
+          "type": "whatsapp-cta",
+          "settings": {
+            "heading": { "en": "Prefer to order on WhatsApp?", "bn": "হোয়াটসঅ্যাপে অর্ডার করতে চান?" },
+            "text": { "en": "Send us a photo of what you like and we'll take care of the rest.", "bn": "পছন্দের পণ্যের ছবি পাঠান, বাকিটা আমরা দেখব।" },
+            "buttonLabel": { "en": "Chat with us", "bn": "মেসেজ দিন" },
+            "message": { "en": "Hi! I'd like to place an order.", "bn": "আসসালামু আলাইকুম! আমি অর্ডার করতে চাই।" }
+          }
+        }
+      ]
+    },
+    "collection": {
+      "sections": [
+        {
+          "id": "collection-main",
+          "type": "collection-main",
+          "settings": { "heading": { "en": "All products", "bn": "সব পণ্য" }, "perPage": 16, "showCategoryFilter": true }
+        }
+      ]
+    },
+    "product": {
+      "sections": [
+        {
+          "id": "product-main",
+          "type": "product-main",
+          "settings": {
+            "showStock": true,
+            "deliveryNote": { "en": "Inside Dhaka: 1-2 days · Outside Dhaka: 3-5 days. Cash on delivery available.", "bn": "ঢাকার ভেতরে: ১-২ দিন · ঢাকার বাইরে: ৩-৫ দিন। ক্যাশ অন ডেলিভারি সুবিধা আছে।" },
+            "showWhatsapp": true,
+            "sizeGuide": ""
+          }
+        },
+        {
+          "id": "related",
+          "type": "featured-products",
+          "settings": { "heading": { "en": "You may also like", "bn": "আপনার পছন্দ হতে পারে" }, "collection": "all", "sort": "newest", "onSaleOnly": false, "limit": 4, "showViewAll": false }
+        }
+      ]
+    },
+    "cart": {
+      "sections": [
+        {
+          "id": "cart-main",
+          "type": "cart-main",
+          "settings": {
+            "heading": { "en": "Your cart", "bn": "আপনার কার্ট" },
+            "emptyText": { "en": "Your cart is empty.", "bn": "আপনার কার্ট খালি।" },
+            "note": { "en": "Delivery charge is calculated at checkout.", "bn": "ডেলিভারি চার্জ চেকআউটে যোগ হবে।" }
+          }
+        }
+      ]
+    },
+    "checkout": {
+      "sections": [
+        {
+          "id": "checkout-main",
+          "type": "checkout-main",
+          "settings": {
+            "heading": { "en": "Checkout", "bn": "চেকআউট" },
+            "requireEmail": false,
+            "successMessage": { "en": "Thank you! We will call you shortly to confirm your order.", "bn": "ধন্যবাদ! অর্ডার নিশ্চিত করতে আমরা শীঘ্রই আপনাকে কল করব।" }
+          }
+        }
+      ]
+    }
+  }
+}

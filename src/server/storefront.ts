@@ -56,8 +56,10 @@ export async function resolveThemeContext(
     where: { storeId, isLive: true },
     include: { publishedVersion: true },
   })
-  if (!live?.publishedVersion || !live.publishedContent) throw notFound('This store has not published a theme yet')
-  return { version: live.publishedVersion, content: live.publishedContent }
+  if (live?.publishedVersion && live.publishedContent) return { version: live.publishedVersion, content: live.publishedContent }
+  // Local theme development (`vite dev`): store data only — the SDK falls back to the theme's own defaults.
+  if (opts.mode === 'preview') return { version: null, content: null }
+  throw new HttpError(404, 'This store has not published a theme yet')
 }
 
 export async function storefrontBootstrap(
@@ -67,7 +69,8 @@ export async function storefrontBootstrap(
   const store = await getActiveStore(slug)
   const settings = parseStoreSettings(store.settings)
   const { version, content } = await resolveThemeContext(store.id, opts)
-  const themeFeatures = new Set(version.features)
+  // Without a theme version (local dev) assume the theme supports everything the plan allows.
+  const themeFeatures = new Set(version ? version.features : [...store.plan.features, 'cod'])
   const planFeatures = new Set(store.plan.features)
 
   // A payment method is offered only if the store enabled it, the theme supports it and the plan unlocks it.
@@ -95,7 +98,7 @@ export async function storefrontBootstrap(
       language: store.language,
       currency: 'BDT',
     },
-    theme: { features: version.features, version: version.version },
+    theme: { features: version ? version.features : [...themeFeatures], version: version?.version ?? 'dev' },
     plan: { key: store.plan.key, features: store.plan.features },
     content,
     payments,
@@ -118,6 +121,14 @@ function escapeJson(value: unknown) {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (c) => (c === '\u2028' ? '\\u2028' : '\\u2029'))
 }
 
+/** Theme roots must end in "/" so relative asset URLs ("./assets/x.js") resolve inside the root. */
+export function trailingSlashRedirect(req: Request, isRoot: boolean) {
+  const url = new URL(req.url)
+  if (!isRoot || url.pathname.endsWith('/')) return null
+  url.pathname += '/'
+  return Response.redirect(url, 308)
+}
+
 /**
  * Serves a file from a theme version's dist/. index.html gets the runtime config injected
  * so the SDK knows which store / mode / install to load.
@@ -127,7 +138,6 @@ export async function serveThemeFile(opts: {
   slug: string
   version: string
   path: string
-  basePath: string
   config: Record<string, unknown>
   sandboxed: boolean
 }) {
@@ -162,9 +172,8 @@ export async function serveThemeFile(opts: {
 
   if (isIndex) {
     const html = new TextDecoder().decode(file.body)
-    const inject =
-      `<base href="${opts.basePath}">` +
-      `<script>window.__NEXDROP_CONFIG__=${escapeJson(opts.config)}</script>`
+    // No <base> tag: themes use hash routing, so the document path is always the theme root.
+    const inject = `<script>window.__NEXDROP_CONFIG__=${escapeJson(opts.config)}</script>`
     const body = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + inject) : inject + html
     headers['Content-Type'] = 'text/html; charset=utf-8'
     headers['Cache-Control'] = 'no-store'

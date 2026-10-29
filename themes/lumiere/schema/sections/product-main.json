@@ -1,0 +1,12 @@
+{
+  "type": "product-main",
+  "label": "Product details",
+  "pages": ["product"],
+  "unique": true,
+  "fields": [
+    { "key": "showStock", "type": "toggle", "label": "Show stock status", "default": true },
+    { "key": "deliveryNote", "type": "textarea", "label": "Delivery note", "localized": true },
+    { "key": "showWhatsapp", "type": "toggle", "label": "Show 'Order on WhatsApp' button", "default": true },
+    { "key": "sizeGuide", "type": "image", "label": "Size guide image", "minPlan": "pro" }
+  ]
+}

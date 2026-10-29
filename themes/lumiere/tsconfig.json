@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "paths": { "@nexdrop/theme-sdk": ["../../packages/theme-sdk/src/index.tsx"] }
+  },
+  "include": ["src"]
+}

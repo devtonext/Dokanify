@@ -1,0 +1,18 @@
+{
+  "type": "rich-text",
+  "label": "Text block",
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "body", "type": "richtext", "label": "Text", "localized": true },
+    {
+      "key": "width",
+      "type": "select",
+      "label": "Width",
+      "default": "narrow",
+      "options": [
+        { "value": "narrow", "label": "Narrow" },
+        { "value": "wide", "label": "Wide" }
+      ]
+    }
+  ]
+}

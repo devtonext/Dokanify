@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { isStorefrontHost, serveThemeFile, themeBaseUrl } from '@/server/storefront'
+import { isStorefrontHost, serveThemeFile, themeBaseUrl, trailingSlashRedirect } from '@/server/storefront'
 
 type Ctx = { params: Promise<{ path: string[] }> }
 
@@ -17,6 +17,8 @@ export async function GET(req: Request, { params }: Ctx) {
   const [slug, version, ...rest] = (await params).path
   if (!slug || !version) return new Response('Not found', { status: 404 })
   const path = rest.join('/')
+  const redirect = trailingSlashRedirect(req, rest.length === 0)
+  if (redirect) return redirect
   const url = new URL(req.url)
   const isDocument = !path || path === 'index.html' || !/\.[a-z0-9]+$/i.test(path)
 
@@ -38,7 +40,6 @@ export async function GET(req: Request, { params }: Ctx) {
     slug,
     version,
     path,
-    basePath: base,
     sandboxed: !isStorefrontHost(req.headers.get('host')),
     config: {
       mode,

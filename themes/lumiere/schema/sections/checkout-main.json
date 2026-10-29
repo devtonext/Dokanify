@@ -1,0 +1,11 @@
+{
+  "type": "checkout-main",
+  "label": "Checkout",
+  "pages": ["checkout"],
+  "unique": true,
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "requireEmail", "type": "toggle", "label": "Ask for email", "default": false },
+    { "key": "successMessage", "type": "textarea", "label": "Thank-you message", "localized": true }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "type": "category-grid",
+  "label": "Category grid",
+  "pages": ["home", "collection"],
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    {
+      "key": "columns",
+      "type": "select",
+      "label": "Columns on desktop",
+      "default": "4",
+      "options": [
+        { "value": "2", "label": "2" },
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" }
+      ]
+    },
+    {
+      "key": "categories",
+      "type": "list",
+      "label": "Categories",
+      "maxItems": 8,
+      "fields": [
+        { "key": "title", "type": "text", "label": "Title", "localized": true },
+        { "key": "image", "type": "image", "label": "Image" },
+        { "key": "collection", "type": "collection", "label": "Links to" }
+      ]
+    }
+  ]
+}

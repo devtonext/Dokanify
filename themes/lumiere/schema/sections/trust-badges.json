@@ -1,0 +1,29 @@
+{
+  "type": "trust-badges",
+  "label": "Trust badges",
+  "description": "Delivery, COD, returns — reassure Bangladeshi shoppers",
+  "fields": [
+    {
+      "key": "items",
+      "type": "list",
+      "label": "Badges",
+      "maxItems": 4,
+      "fields": [
+        {
+          "key": "icon",
+          "type": "select",
+          "label": "Icon",
+          "options": [
+            { "value": "truck", "label": "Delivery truck" },
+            { "value": "cash", "label": "Cash" },
+            { "value": "return", "label": "Return" },
+            { "value": "support", "label": "Support" },
+            { "value": "shield", "label": "Shield" }
+          ]
+        },
+        { "key": "title", "type": "text", "label": "Title", "localized": true },
+        { "key": "text", "type": "text", "label": "Text", "localized": true }
+      ]
+    }
+  ]
+}

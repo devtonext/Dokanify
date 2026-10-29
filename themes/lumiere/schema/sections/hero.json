@@ -1,0 +1,44 @@
+{
+  "type": "hero",
+  "label": "Hero slideshow",
+  "description": "Full-width banner with one or more slides",
+  "pages": ["home"],
+  "fields": [
+    {
+      "key": "slides",
+      "type": "list",
+      "label": "Slides",
+      "maxItems": 5,
+      "fields": [
+        { "key": "image", "type": "image", "label": "Image" },
+        { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+        { "key": "subheading", "type": "textarea", "label": "Subheading", "localized": true },
+        { "key": "buttonLabel", "type": "text", "label": "Button label", "localized": true },
+        { "key": "buttonLink", "type": "link", "label": "Button link" }
+      ]
+    },
+    {
+      "key": "height",
+      "type": "select",
+      "label": "Height",
+      "default": "large",
+      "options": [
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ]
+    },
+    {
+      "key": "align",
+      "type": "select",
+      "label": "Text alignment",
+      "default": "left",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ]
+    },
+    { "key": "overlay", "type": "range", "label": "Image darkness", "min": 0, "max": 80, "step": 5, "default": 35 },
+    { "key": "autoplay", "type": "toggle", "label": "Auto-rotate slides", "default": true, "minPlan": "pro" }
+  ]
+}

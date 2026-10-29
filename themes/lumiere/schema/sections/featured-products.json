@@ -1,0 +1,23 @@
+{
+  "type": "featured-products",
+  "label": "Featured products",
+  "pages": ["home", "product", "collection", "cart"],
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "collection", "type": "collection", "label": "Products from", "default": "all" },
+    {
+      "key": "sort",
+      "type": "select",
+      "label": "Order",
+      "default": "newest",
+      "options": [
+        { "value": "newest", "label": "Newest first" },
+        { "value": "price-asc", "label": "Price: low to high" },
+        { "value": "price-desc", "label": "Price: high to low" }
+      ]
+    },
+    { "key": "onSaleOnly", "type": "toggle", "label": "Only discounted products", "default": false },
+    { "key": "limit", "type": "range", "label": "Number of products", "min": 2, "max": 12, "step": 1, "default": 8 },
+    { "key": "showViewAll", "type": "toggle", "label": "Show 'view all' link", "default": true }
+  ]
+}

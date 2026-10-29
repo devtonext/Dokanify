@@ -1,0 +1,27 @@
+{
+  "id": "lumiere-fashion",
+  "name": "Lumière Fashion",
+  "version": "1.0.0",
+  "niche": "fashion",
+  "description": "An elegant, bilingual fashion storefront for Bangladeshi clothing brands — Panjabi, saree, three-piece and more.",
+  "author": "NexDrop",
+  "sdkVersion": "1",
+  "features": ["catalog", "cart", "checkout", "search", "cod", "bkash", "nagad", "bilingual", "order-tracking"],
+  "pages": ["home", "collection", "product", "cart", "checkout"],
+  "sections": [
+    "hero",
+    "trust-badges",
+    "category-grid",
+    "featured-products",
+    "promo-banner",
+    "testimonials",
+    "whatsapp-cta",
+    "rich-text",
+    "collection-main",
+    "product-main",
+    "cart-main",
+    "checkout-main"
+  ],
+  "minPlan": "free",
+  "changelog": "Initial release."
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Loader2 } from 'lucide-react'
@@ -15,6 +15,9 @@ function LoginForm() {
   const params = useSearchParams()
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // Until hydrated, the form must not submit natively (it would put the password in the URL).
+  const [ready, setReady] = useState(false)
+  useEffect(() => setReady(true), [])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -37,7 +40,7 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} method="post" className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="username" required autoFocus />
@@ -47,7 +50,7 @@ function LoginForm() {
         <Input id="password" name="password" type="password" autoComplete="current-password" required />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={busy}>
+      <Button type="submit" className="w-full" disabled={busy || !ready}>
         {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Sign in
       </Button>

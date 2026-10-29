@@ -1,0 +1,82 @@
+{
+  "groups": [
+    {
+      "id": "colors",
+      "label": "Colors",
+      "fields": [
+        { "key": "colorPrimary", "type": "color", "label": "Primary (buttons, links)", "default": "#1f2937" },
+        { "key": "colorAccent", "type": "color", "label": "Accent (sale badges)", "default": "#b45309" },
+        { "key": "colorBackground", "type": "color", "label": "Background", "default": "#fbf8f4" },
+        { "key": "colorText", "type": "color", "label": "Text", "default": "#1c1917" }
+      ]
+    },
+    {
+      "id": "typography",
+      "label": "Typography & shape",
+      "fields": [
+        { "key": "fontHeading", "type": "font", "label": "Heading font", "default": "Playfair Display" },
+        { "key": "fontBody", "type": "font", "label": "Body font", "default": "Inter" },
+        { "key": "fontBangla", "type": "font", "label": "Bangla font", "default": "Hind Siliguri", "help": "Used when the storefront is in বাংলা" },
+        { "key": "radius", "type": "range", "label": "Corner radius", "min": 0, "max": 24, "step": 2, "default": 8 }
+      ]
+    },
+    {
+      "id": "header",
+      "label": "Header",
+      "fields": [
+        { "key": "logo", "type": "image", "label": "Logo", "help": "Leave empty to show the store name" },
+        { "key": "logoWidth", "type": "range", "label": "Logo width", "min": 60, "max": 240, "step": 10, "default": 120 },
+        {
+          "key": "menu",
+          "type": "list",
+          "label": "Menu links",
+          "maxItems": 8,
+          "fields": [
+            { "key": "label", "type": "text", "label": "Label", "localized": true },
+            { "key": "link", "type": "link", "label": "Link" }
+          ]
+        },
+        { "key": "stickyHeader", "type": "toggle", "label": "Sticky header", "default": true }
+      ]
+    },
+    {
+      "id": "announcement",
+      "label": "Announcement bar",
+      "fields": [
+        { "key": "announcementEnabled", "type": "toggle", "label": "Show announcement", "default": true },
+        { "key": "announcementText", "type": "text", "label": "Text", "localized": true },
+        { "key": "announcementLink", "type": "link", "label": "Link" },
+        { "key": "announcementBg", "type": "color", "label": "Background", "default": "#1f2937" }
+      ]
+    },
+    {
+      "id": "footer",
+      "label": "Footer",
+      "fields": [
+        { "key": "footerAbout", "type": "textarea", "label": "About text", "localized": true },
+        {
+          "key": "footerLinks",
+          "type": "list",
+          "label": "Footer links",
+          "maxItems": 10,
+          "fields": [
+            { "key": "label", "type": "text", "label": "Label", "localized": true },
+            { "key": "link", "type": "link", "label": "Link" }
+          ]
+        },
+        { "key": "showPaymentIcons", "type": "toggle", "label": "Show payment methods", "default": true },
+        { "key": "copyright", "type": "text", "label": "Copyright line", "localized": true }
+      ]
+    },
+    {
+      "id": "social",
+      "label": "Social & contact",
+      "fields": [
+        { "key": "facebook", "type": "link", "label": "Facebook page URL" },
+        { "key": "instagram", "type": "link", "label": "Instagram URL" },
+        { "key": "youtube", "type": "link", "label": "YouTube URL" },
+        { "key": "whatsapp", "type": "text", "label": "WhatsApp number", "help": "e.g. 01712345678" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "testimonials",
+  "label": "Customer reviews",
+  "description": "Available on the Pro plan",
+  "minPlan": "pro",
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    {
+      "key": "items",
+      "type": "list",
+      "label": "Reviews",
+      "maxItems": 6,
+      "fields": [
+        { "key": "quote", "type": "textarea", "label": "Review", "localized": true },
+        { "key": "name", "type": "text", "label": "Customer name" },
+        { "key": "location", "type": "text", "label": "City" },
+        { "key": "rating", "type": "range", "label": "Stars", "min": 1, "max": 5, "step": 1, "default": 5 }
+      ]
+    }
+  ]
+}

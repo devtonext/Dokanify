@@ -1,0 +1,11 @@
+{
+  "type": "collection-main",
+  "label": "Product listing",
+  "pages": ["collection"],
+  "unique": true,
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading (all products)", "localized": true },
+    { "key": "perPage", "type": "range", "label": "Products per page", "min": 8, "max": 48, "step": 4, "default": 16 },
+    { "key": "showCategoryFilter", "type": "toggle", "label": "Show category filter", "default": true }
+  ]
+}

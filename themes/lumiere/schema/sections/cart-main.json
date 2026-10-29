@@ -1,0 +1,11 @@
+{
+  "type": "cart-main",
+  "label": "Cart",
+  "pages": ["cart"],
+  "unique": true,
+  "fields": [
+    { "key": "heading", "type": "text", "label": "Heading", "localized": true },
+    { "key": "emptyText", "type": "text", "label": "Empty cart text", "localized": true },
+    { "key": "note", "type": "text", "label": "Note under total", "localized": true }
+  ]
+}

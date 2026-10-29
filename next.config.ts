@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   poweredByHeader: false,
+  // Theme roots (/t/…/, /s/store/) must keep their trailing slash so relative asset URLs resolve.
+  skipTrailingSlashRedirect: true,
   images: { remotePatterns: [{ protocol: 'https', hostname: '**' }] },
   async headers() {
     return [

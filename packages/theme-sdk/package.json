@@ -1,0 +1,26 @@
+{
+  "name": "@nexdrop/theme-sdk",
+  "version": "1.0.0",
+  "description": "Runtime SDK for NexDrop storefront themes: editable content, catalogue, cart, checkout, bilingual text.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "sideEffects": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.6.0"
+  }
+}
