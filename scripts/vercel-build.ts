@@ -10,7 +10,8 @@ function run(cmd: string) {
   execSync(cmd, { stdio: 'inherit', env: process.env })
 }
 
-const { databaseUrl, directUrl } = applyDatabaseUrls()
+const { databaseUrl, directUrl, source } = applyDatabaseUrls()
+console.log(`Database from: ${source === 'supabase-integration' ? 'Supabase integration (POSTGRES_PRISMA_URL / POSTGRES_URL_NON_POOLING)' : source}`)
 const mask = (u: string) => u.replace(/\/\/([^:]+):[^@]*@/, '//$1:****@')
 console.log(`DATABASE_URL → ${mask(databaseUrl)}`)
 console.log(`DIRECT_URL   → ${mask(directUrl)}`)
