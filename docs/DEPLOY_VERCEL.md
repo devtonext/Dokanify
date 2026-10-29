@@ -44,7 +44,7 @@ Open the Vercel URL. The sign-in page shows **Try the demo**:
 | Theme manager | `demo.themes@nexdrop.app` | `Demo@12345` |
 | Support | `demo.support@nexdrop.app` | `Demo@12345` |
 
-To try the theme flow, upload `lumiere-fashion-1.0.0.zip` from Themes. To build it yourself:
+To try the theme flow, download `examples/lumiere-fashion-1.0.0.zip` from the repo and upload it in Themes. To build it yourself:
 `cd themes/lumiere && npm install && npm run package`.
 
 ## How it works on Vercel (defaults)
