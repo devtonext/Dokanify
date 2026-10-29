@@ -2,7 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronRight, LogOut, Settings, User } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { signOut, useSession } from 'next-auth/react'
+import { ChevronRight, LogOut, Settings, Store, User } from 'lucide-react'
+import { useStoreScope } from '@/hooks/use-store-scope'
+import { api, qs } from '@/lib/api'
+import { initials } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -24,21 +29,24 @@ import {
   IconTheme,
 } from '@/components/icons'
 
-const navigation = [
+type NavItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }>; badgeKey?: 'pending' }
+
+const navigation: { label: string; items: NavItem[] }[] = [
   {
     label: 'Workspace',
     items: [
       { name: 'Overview', href: '/', icon: IconOverview },
-      { name: 'Orders', href: '/orders', icon: IconOrders, badge: '12' },
+      { name: 'Orders', href: '/orders', icon: IconOrders, badgeKey: 'pending' },
       { name: 'Products', href: '/products', icon: IconProducts },
       { name: 'Customers', href: '/customers', icon: IconCustomers },
     ],
   },
   {
-    label: 'Insights',
+    label: 'Platform',
     items: [
+      { name: 'Stores', href: '/stores', icon: Store },
+      { name: 'Themes', href: '/theme', icon: IconTheme },
       { name: 'Analytics', href: '/analytics', icon: IconAnalytics },
-      { name: 'Theme', href: '/theme', icon: IconTheme },
     ],
   },
   {
@@ -47,12 +55,24 @@ const navigation = [
   },
 ]
 
+const ROLE_LABEL: Record<string, string> = { SUPER_ADMIN: 'Super admin', THEME_MANAGER: 'Theme manager', SUPPORT: 'Support' }
+
 const itemBase =
   'group relative flex w-full items-center rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset'
 
 export function SidebarNav() {
   const { collapsed } = useSidebarState()
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const { storeId } = useStoreScope()
+  const user = session?.user as { name?: string; email?: string; role?: string } | undefined
+  const { data: pending } = useQuery({
+    queryKey: ['orders', 'pending-count', storeId],
+    queryFn: () => api<{ total: number }>(`/api/orders${qs({ status: 'PENDING', limit: 1, store: storeId })}`),
+    enabled: Boolean(user),
+    refetchInterval: 60_000,
+  })
+  const badges = { pending: pending?.total ? String(pending.total) : undefined }
 
   return (
     <div className="flex h-full flex-col">
@@ -65,7 +85,7 @@ export function SidebarNav() {
         <Link
           href="/"
           prefetch={true}
-          aria-label="Dokanio home"
+          aria-label="NexDrop admin home"
           className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg ring-1 ring-white/25 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70"
         >
           <IconLogo className="size-5" />
@@ -73,8 +93,8 @@ export function SidebarNav() {
 
         {!collapsed && (
           <div className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold tracking-tight text-foreground">Dokanio</span>
-            <span className="block text-[11px] text-muted-foreground">Commerce OS</span>
+            <span className="block text-sm font-semibold tracking-tight text-foreground">NexDrop</span>
+            <span className="block text-[11px] text-muted-foreground">Super Admin</span>
           </div>
         )}
       </div>
@@ -93,8 +113,8 @@ export function SidebarNav() {
 
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href);
-                  const badge = 'badge' in item ? item.badge : undefined
+                  const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+                  const badge = item.badgeKey ? badges[item.badgeKey] : undefined
                   const Icon = item.icon
 
                   return (
@@ -172,16 +192,16 @@ export function SidebarNav() {
                 'flex w-full items-center rounded-xl border border-white/60 bg-white/60 text-left shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10',
                 collapsed ? 'justify-center p-2' : 'gap-3 p-2.5'
               )}
-              aria-label="Rahman Ahmed"
+              aria-label={user?.name || 'Account'}
             >
               <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-semibold text-white dark:from-slate-200 dark:to-slate-400 dark:text-slate-900">
-                RA
+                {initials(user?.name || '?')}
               </div>
               {!collapsed && (
                 <>
-                  <div className="flex-1">
-                    <span className="block text-xs font-semibold">Rahman Ahmed</span>
-                    <span className="block text-[11px] text-muted-foreground">Store Owner</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-semibold">{user?.name}</span>
+                    <span className="block text-[11px] text-muted-foreground">{ROLE_LABEL[user?.role || ''] || ''}</span>
                   </div>
                   <ChevronRight className="ml-auto size-4 text-muted-foreground" />
                 </>
@@ -190,19 +210,23 @@ export function SidebarNav() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={8} className="w-56">
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              rahman@dokanio.store
+              {user?.email}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 size-4" />
-              Profile
+            <DropdownMenuItem asChild>
+              <Link href="/settings?tab=security">
+                <User className="mr-2 size-4" />
+                Account security
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 size-4" />
-              Store settings
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings className="mr-2 size-4" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => signOut({ callbackUrl: '/login' })}>
               <LogOut className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>

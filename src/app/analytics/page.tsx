@@ -29,47 +29,21 @@ import {
 import { formatBDT } from '@/lib/currency'
 import { Wallet, ShoppingBag, UsersRound, BadgeDollarSign } from 'lucide-react'
 
-// Mock data
-const salesData = [
-  { month: 'Jan', revenue: 450000, orders: 45, customers: 32 },
-  { month: 'Feb', revenue: 520000, orders: 52, customers: 38 },
-  { month: 'Mar', revenue: 480000, orders: 48, customers: 35 },
-  { month: 'Apr', revenue: 610000, orders: 61, customers: 45 },
-  { month: 'May', revenue: 580000, orders: 58, customers: 42 },
-  { month: 'Jun', revenue: 720000, orders: 72, customers: 52 },
-  { month: 'Jul', revenue: 680000, orders: 68, customers: 48 },
-  { month: 'Aug', revenue: 750000, orders: 75, customers: 55 },
-  { month: 'Sep', revenue: 820000, orders: 82, customers: 60 },
-  { month: 'Oct', revenue: 780000, orders: 78, customers: 56 },
-  { month: 'Nov', revenue: 950000, orders: 95, customers: 70 },
-  { month: 'Dec', revenue: 1100000, orders: 110, customers: 82 },
-]
-
-const cityData = [
-  { name: 'Dhaka', value: 850000, color: '#3b82f6' },
-  { name: 'Chittagong', value: 320000, color: '#8b5cf6' },
-  { name: 'Sylhet', value: 180000, color: '#ec4899' },
-  { name: 'Khulna', value: 120000, color: '#f97316' },
-  { name: 'Rajshahi', value: 95000, color: '#14b8a6' },
-  { name: 'Others', value: 155000, color: '#6b7280' },
-]
-
-const categoryData = [
-  { name: "Men's Wear", sales: 1250000, orders: 285 },
-  { name: "Women's Wear", sales: 980000, orders: 245 },
-  { name: "Kids Wear", sales: 450000, orders: 135 },
-  { name: "Accessories", sales: 275000, orders: 95 },
-  { name: "Home Decor", sales: 195000, orders: 65 },
-]
-
-const paymentMethodData = [
-  { name: 'bKash', amount: 1450000, percentage: 43 },
-  { name: 'Nagad', amount: 890000, percentage: 26 },
-  { name: 'Rocket', amount: 620000, percentage: 18 },
-  { name: 'Cash on Delivery', amount: 420000, percentage: 13 },
-]
+import { useState } from 'react'
+import { useAnalytics } from '@/hooks/use-analytics'
+import { useStoreScope } from '@/hooks/use-store-scope'
+import { PAYMENT_COLORS, type PaymentMethodKey } from '@/lib/bd'
+import { chartTooltip, CHART_COLORS } from '@/lib/chart'
+import { formatBDTCompact } from '@/lib/currency'
+import { formatChange, paymentLabel, trendOf } from '@/lib/format'
 
 export default function AnalyticsPage() {
+  const { storeId, store } = useStoreScope()
+  const [range, setRange] = useState('year')
+  const { data } = useAnalytics(storeId, range)
+  const m = data?.metrics
+  const cityData = (data?.cities ?? []).map((c, i) => ({ ...c, color: CHART_COLORS[i % CHART_COLORS.length] }))
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -78,19 +52,19 @@ export default function AnalyticsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
             <p className="text-muted-foreground">
-              Detailed insights into your store performance
+              {store ? `Performance of ${store.name}` : 'Performance across all stores'}
             </p>
           </div>
-          <Select defaultValue="year">
+          <Select value={range} onValueChange={setRange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Time Period" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="quarter">This Quarter</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
+              <SelectItem value="week">Last 7 days</SelectItem>
+              <SelectItem value="month">Last 30 days</SelectItem>
+              <SelectItem value="quarter">Last 3 months</SelectItem>
+              <SelectItem value="year">Last 12 months</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -99,34 +73,34 @@ export default function AnalyticsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Revenue"
-            value={formatBDT(3380000)}
-            change="+24.5% from last year"
+            value={m ? formatBDT(m.revenue.value) : '—'}
+            change={m && formatChange(m.revenue.change)}
             icon={Wallet}
-            trend="up"
+            trend={m ? trendOf(m.revenue.change) : 'neutral'}
             tone="emerald"
           />
           <MetricCard
             title="Total Orders"
-            value="825"
-            change="+18.2% from last year"
+            value={m ? m.orders.value.toLocaleString() : '—'}
+            change={m && formatChange(m.orders.change)}
             icon={ShoppingBag}
-            trend="up"
+            trend={m ? trendOf(m.orders.change) : 'neutral'}
             tone="sky"
           />
           <MetricCard
             title="Total Customers"
-            value="583"
-            change="+32.1% from last year"
+            value={m ? m.customers.value.toLocaleString() : '—'}
+            change={m && `+${m.customers.new} new in this period`}
             icon={UsersRound}
-            trend="up"
+            trend={m?.customers.new ? 'up' : 'neutral'}
             tone="violet"
           />
           <MetricCard
             title="Average Order Value"
-            value={formatBDT(4097)}
-            change="+5.3% from last year"
+            value={m ? formatBDT(Math.round(m.aov.value)) : '—'}
+            change={m && formatChange(m.aov.change)}
             icon={BadgeDollarSign}
-            trend="up"
+            trend={m ? trendOf(m.aov.change) : 'neutral'}
             tone="amber"
           />
         </div>
@@ -148,15 +122,15 @@ export default function AnalyticsPage() {
                 <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-400/30 blur-3xl" />
                 <CardHeader className="relative z-10">
                   <CardTitle>Revenue & Orders Trend</CardTitle>
-                  <CardDescription>Monthly performance over the year</CardDescription>
+                  <CardDescription>Monthly revenue, last 12 months</CardDescription>
                 </CardHeader>
                 <CardContent className="relative z-10">
                   <ResponsiveContainer width="100%" height={400}>
-                    <AreaChart data={salesData}>
+                    <AreaChart data={data?.monthly}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -164,20 +138,16 @@ export default function AnalyticsPage() {
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tickFormatter={(value) => `৳${(value / 1000)}K`}
+                        tickFormatter={(value) => formatBDTCompact(value)}
                       />
                       <Tooltip 
-                        formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Revenue']}
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
+                        formatter={(value: number) => [formatBDT(value), 'Revenue']}
+                        contentStyle={chartTooltip}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="revenue" 
-                        stroke="hsl(var(--primary))" 
+                        stroke="#10b981" 
                         strokeWidth={2}
                         fill="url(#colorRevenue)" 
                       />
@@ -192,7 +162,7 @@ export default function AnalyticsPage() {
                 <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/30 blur-3xl" />
                 <CardHeader className="relative z-10">
                   <CardTitle>Sales by City</CardTitle>
-                  <CardDescription>Revenue distribution across cities</CardDescription>
+                  <CardDescription>Top cities by revenue in this period</CardDescription>
                 </CardHeader>
                 <CardContent className="relative z-10">
                   <ResponsiveContainer width="100%" height={300}>
@@ -202,7 +172,7 @@ export default function AnalyticsPage() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -211,7 +181,7 @@ export default function AnalyticsPage() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Revenue']} />
+                      <Tooltip formatter={(value: number) => [formatBDT(value), 'Revenue']} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -227,16 +197,16 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent className="relative z-10">
                   <div className="space-y-4">
-                    {paymentMethodData.map((method) => (
-                      <div key={method.name}>
+                    {data?.payments.map((method) => (
+                      <div key={method.method}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{method.name}</span>
-                          <span className="text-sm text-muted-foreground">{method.percentage}%</span>
+                          <span className="text-sm font-medium">{paymentLabel(method.method)}</span>
+                          <span className="text-sm text-muted-foreground">{method.percentage}% · {method.orders} orders</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                          <div 
-                            className="h-full bg-primary transition-all duration-300"
-                            style={{ width: `${method.percentage}%` }}
+                          <div
+                            className="h-full transition-all duration-300"
+                            style={{ width: `${method.percentage}%`, background: PAYMENT_COLORS[method.method as PaymentMethodKey] }}
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -260,23 +230,19 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={salesData}>
+                  <BarChart data={data?.monthly}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="month" axisLine={false} tickLine={false} />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
-                      tickFormatter={(value) => `৳${(value / 1000)}K`}
+                      tickFormatter={(value) => formatBDTCompact(value)}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Revenue']}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
+                      formatter={(value: number) => [formatBDT(value), 'Revenue']}
+                      contentStyle={chartTooltip}
                     />
-                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#6366f1" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -288,12 +254,12 @@ export default function AnalyticsPage() {
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-400/25 via-fuchsia-300/10 to-transparent" />
               <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-violet-400/30 blur-3xl" />
               <CardHeader className="relative z-10">
-                <CardTitle>Customer Growth</CardTitle>
-                <CardDescription>New customers acquired over time</CardDescription>
+                <CardTitle>Active Customers</CardTitle>
+                <CardDescription>Unique customers ordering each month</CardDescription>
               </CardHeader>
               <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart data={salesData}>
+                  <AreaChart data={data?.monthly}>
                     <defs>
                       <linearGradient id="colorCustomers" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
@@ -305,11 +271,7 @@ export default function AnalyticsPage() {
                     <YAxis axisLine={false} tickLine={false} />
                     <Tooltip 
                       formatter={(value: number) => [value, 'Customers']}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
+                      contentStyle={chartTooltip}
                     />
                     <Area 
                       type="monotone" 
@@ -334,13 +296,13 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={categoryData} layout="vertical">
+                  <BarChart data={data?.categories} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                     <XAxis 
                       type="number" 
                       axisLine={false} 
                       tickLine={false} 
-                      tickFormatter={(value) => `৳${(value / 1000)}K`}
+                      tickFormatter={(value) => formatBDTCompact(value)}
                     />
                     <YAxis 
                       type="category" 
@@ -350,14 +312,10 @@ export default function AnalyticsPage() {
                       width={100}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Revenue']}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
+                      formatter={(value: number) => [formatBDT(value), 'Revenue']}
+                      contentStyle={chartTooltip}
                     />
-                    <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+                    <Bar dataKey="sales" fill="#6366f1" radius={[0, 8, 8, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

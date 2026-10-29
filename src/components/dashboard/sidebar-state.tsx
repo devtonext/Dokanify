@@ -9,7 +9,7 @@ interface SidebarState {
 }
 
 const SidebarStateContext = createContext<SidebarState | null>(null)
-const STORAGE_KEY = 'dokanio.sidebar.collapsed'
+const STORAGE_KEY = 'nexdrop.sidebar.collapsed'
 
 export function SidebarStateProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsedState] = useState(false)
