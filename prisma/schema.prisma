@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Store settings for Bangladeshi market
+model Store {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String
+  email           String
+  address         String
+  city            String
+  logo            String?
+  currency        String   @default("BDT")
+  paymentMethods  String   // JSON string: ["bkash", "nagad", "rocket", "cod"]
+  shippingZones   String   // JSON string of shipping zones
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Product model with pricing in BDT
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float    // In BDT
+  comparePrice Float?  // Original price for discount
+  sku         String   @unique
+  barcode     String?
+  quantity    Int      @default(0)
+  images      String   // JSON string of image URLs
+  category    String?
+  tags        String   // JSON string of tags
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Customer model with Bangladeshi phone format
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String   // Bangladeshi format: +880...
+  address     String?
+  city        String?
+  totalSpent  Float    @default(0) // In BDT
+  orderCount  Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+// Order model with Bangladeshi payment methods
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotal        Float    // In BDT
+  shipping        Float    @default(0) // In BDT
+  discount        Float    @default(0) // In BDT
+  total           Float    // In BDT
+  paymentMethod   String   // bkash, nagad, rocket, cod
+  paymentStatus   PaymentStatus @default(PENDING)
+  shippingAddress String
+  city            String
+  phone           String
+  notes           String?
+  items           String   // JSON string of order items
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
