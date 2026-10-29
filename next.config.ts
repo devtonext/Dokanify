@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for Docker / Coolify (node .next/standalone/server.js)
+  output: 'standalone',
   reactStrictMode: true,
   devIndicators: false,
   poweredByHeader: false,

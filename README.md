@@ -7,8 +7,8 @@ NexDrop marketplace, installed per store, customized in a live visual editor and
 served as storefronts.
 
 * Next.js 16 (App Router), React 19, Tailwind 4, shadcn/ui, TanStack Query
-* PostgreSQL + Prisma, NextAuth (credentials, JWT, roles)
-* Object storage: Cloudflare R2 / S3 (local disk in development)
+* PostgreSQL (Supabase self-hosted works as-is) + Prisma, NextAuth (credentials, JWT, roles)
+* Storage: local volume on a VPS, or any S3-compatible store (Supabase Storage, MinIO, R2)
 * Bangladesh: BDT (৳ with lakh grouping), bKash / Nagad / Rocket / SSLCommerz / COD,
   64 districts and shipping zones, +880 phone normalisation, Pathao/Steadfast/RedX/Paperfly, বাংলা content
 
@@ -56,18 +56,20 @@ prisma/                schema, migrations, seed
 | `THEME_MANAGER` | upload, review, publish and release themes |
 | `SUPPORT` | stores, orders, products, customers, store settings, theme customization |
 
-## Production (Vercel)
+## Production (VPS: Coolify + Supabase)
 
-1. Postgres: Neon or Supabase. Set `DATABASE_URL` (pooled) and `DIRECT_URL` (direct).
-2. Storage: create an R2 bucket and set `STORAGE_DRIVER=s3`, `S3_*`, and `S3_PUBLIC_URL` (bucket custom domain).
-   Add a CORS rule allowing `PUT` from the admin origin, because browsers upload zips/images straight to the bucket.
-3. Set `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `ENCRYPTION_KEY` (`openssl rand -base64 32` each).
-4. Build command: `prisma migrate deploy && npm run build`. Seed once with `npm run db:seed`.
-5. Storefronts on subdomains: add a wildcard domain `*.yourshops.com` to the project and set `STOREFRONT_ROOT_DOMAIN=yourshops.com`.
-   Keep the admin on a **different** domain. Theme code then runs on an origin that can never read admin cookies.
-6. Marketplace sync: set `MARKETPLACE_WEBHOOK_URL` + `MARKETPLACE_WEBHOOK_SECRET`. The NexDrop site receives
-   `theme.published | theme.updated | theme.archived`, signed with `X-NexDrop-Signature: sha256=<hmac>`,
-   or it can poll `GET /api/public/themes`.
+Full guide: [`docs/DEPLOY_COOLIFY.md`](docs/DEPLOY_COOLIFY.md). In short:
+
+1. Deploy Supabase as a Coolify service. The app uses its Postgres through Prisma, in a dedicated
+   `nexdrop` schema (`?schema=nexdrop`), so the tables are never exposed by Supabase's REST API.
+2. Deploy this repo with the **Dockerfile** build pack. Mount a persistent volume at `/app/storage`
+   for themes and images.
+3. Set the env vars from `.env.example`. Use `RUN_SEED=true` for the first deploy only.
+   Migrations run automatically on every start.
+4. Optional: `*.shops.example.com` storefront subdomains (`STOREFRONT_ROOT_DOMAIN`), marketplace webhook.
+
+The app also runs on Vercel (with Supabase/Neon plus R2 storage), but the VPS setup is simpler:
+no serverless body limits, and local disk storage works.
 
 ## Security notes
 

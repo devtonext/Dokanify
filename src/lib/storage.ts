@@ -1,7 +1,7 @@
 /**
  * Object storage abstraction.
- *  - local: ./storage on disk (development only — serverless disks are ephemeral)
- *  - s3:    Cloudflare R2 / AWS S3 / MinIO
+ *  - local: ./storage on disk — development, or a VPS with a persistent volume (not serverless)
+ *  - s3:    Supabase Storage (S3 protocol) / MinIO / Cloudflare R2 / AWS S3
  */
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'

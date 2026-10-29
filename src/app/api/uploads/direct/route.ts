@@ -4,7 +4,7 @@ import { isLocalStorage, storage, verifyLocalUploadToken } from '@/lib/storage'
 import { mimeFor } from '@/lib/themes/validate'
 
 /**
- * Local-storage stand-in for an S3 presigned PUT (development only).
+ * Local-storage stand-in for an S3 presigned PUT (development, or a VPS with a persistent volume).
  * Authorised by the HMAC token minted in storage.presignPut.
  */
 export const PUT = route(async (req) => {
