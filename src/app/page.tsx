@@ -14,61 +14,84 @@ import { PAYMENT_COLORS, type PaymentMethodKey } from '@/lib/bd'
 import { formatBDT, formatBDTCompact } from '@/lib/currency'
 import { chartTooltip } from '@/lib/chart'
 import { formatChange, paymentLabel, timeAgo, trendOf } from '@/lib/format'
-import { MOCK_METRICS, MOCK_REVENUE_CHART, MOCK_PAYMENTS, MOCK_PRODUCTS } from '@/lib/mock-data'
+import { MOCK_METRICS, MOCK_MONTHLY_CHART, MOCK_PAYMENTS, MOCK_PRODUCTS, MOCK_ORDERS } from '@/lib/mock-data'
+import type { OrderStatus } from '@/lib/types'
 
 export default function DashboardPage() {
   const { storeId, store } = useStoreScope()
   const { data, isLoading } = useAnalytics(storeId, 'month')
+
   const m = (data?.metrics && data.metrics.revenue.value > 0) ? data.metrics : MOCK_METRICS
-  const revenuePoints = (data?.revenue && data.revenue.length > 0) ? data.revenue : MOCK_REVENUE_CHART
+  const monthlyData = (data?.monthly && data.monthly.length > 0) ? data.monthly : MOCK_MONTHLY_CHART
+  const paymentsData = (data?.payments && data.payments.length > 0) ? data.payments : MOCK_PAYMENTS
   const topProducts = (data?.topProducts && data.topProducts.length > 0) ? data.topProducts : MOCK_PRODUCTS.slice(0, 5).map(p => ({
-    id: p.id,
     name: p.name,
-    sku: p.sku,
     sold: p.sold,
     revenue: p.sold * p.price,
-    inStock: p.quantity > 0,
-    price: p.price
   }))
-  const paymentBreakdown = (data?.payments && data.payments.length > 0) ? data.payments : MOCK_PAYMENTS
+  const recentOrders = (data?.recentOrders && data.recentOrders.length > 0) ? data.recentOrders : MOCK_ORDERS.map(o => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    total: o.total,
+    status: o.status as OrderStatus,
+    createdAt: o.createdAt,
+    shippingName: o.shippingName,
+    store: { name: store?.name || 'Aarong Heritage' }
+  }))
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader
           title="Dashboard"
-          description={store ? `How ${store.name} is doing over the last 30 days.` : 'Platform-wide performance over the last 30 days.'}
+          description={store ? `How ${store.name} is doing over the last 30 days.` : 'Store performance over the last 30 days.'}
+          actions={
+            <div className="flex items-center gap-2">
+              <Link
+                href="/orders"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              >
+                <span>+ New Order</span>
+              </Link>
+              <Link
+                href="/theme"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-medium text-white shadow-xs hover:bg-indigo-700"
+              >
+                <span>Customize Theme</span>
+              </Link>
+            </div>
+          }
         />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
-            title="Revenue"
-            value={m ? formatBDT(m.revenue.value) : '—'}
-            change={m && formatChange(m.revenue.change)}
+            title="Revenue (30d)"
+            value={formatBDT(m.revenue.value)}
+            change={formatChange(m.revenue.change)}
             icon={Wallet}
-            trend={m ? trendOf(m.revenue.change) : 'neutral'}
+            trend={trendOf(m.revenue.change)}
             tone="emerald"
           />
           <MetricCard
             title="Orders"
-            value={m ? m.orders.value.toLocaleString() : '—'}
-            change={m && formatChange(m.orders.change)}
+            value={m.orders.value.toLocaleString()}
+            change={formatChange(m.orders.change)}
             icon={ShoppingBag}
-            trend={m ? trendOf(m.orders.change) : 'neutral'}
+            trend={trendOf(m.orders.change)}
             tone="sky"
           />
           <MetricCard
             title="Customers"
-            value={m ? m.customers.value.toLocaleString() : '—'}
-            change={m && `+${m.customers.new} new this period`}
+            value={m.customers.value.toLocaleString()}
+            change={`+${m.customers.new} new this period`}
             icon={UsersRound}
-            trend={m?.customers.new ? 'up' : 'neutral'}
+            trend={m.customers.new ? 'up' : 'neutral'}
             tone="violet"
           />
           <MetricCard
             title="Units in stock"
-            value={m ? m.stock.units.toLocaleString() : '—'}
-            change={m && `${m.stock.products} active products`}
+            value={m.stock.units.toLocaleString()}
+            change={`${m.stock.products} active products`}
             icon={Boxes}
             trend="neutral"
             tone="amber"
@@ -80,14 +103,14 @@ export default function DashboardPage() {
             <CardGlow from="from-emerald-400/20" orb="bg-emerald-400/30" />
             <CardHeader className="relative z-10">
               <CardTitle>Revenue Overview</CardTitle>
-              <CardDescription>Monthly revenue for the last 12 months</CardDescription>
+              <CardDescription>Monthly revenue performance</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10 pl-2">
-              {isLoading ? (
+              {isLoading && !data ? (
                 <Skeleton className="h-[350px] w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={data?.monthly}>
+                  <AreaChart data={monthlyData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -109,30 +132,32 @@ export default function DashboardPage() {
             <CardGlow from="from-fuchsia-400/20" orb="bg-fuchsia-400/30" />
             <CardHeader className="relative z-10">
               <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>Revenue by payment method, last 30 days</CardDescription>
+              <CardDescription>Share of revenue by payment channel</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="space-y-4">
-                {data?.payments.map((p) => (
-                  <div key={p.method}>
-                    <div className="mb-1 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full" style={{ background: PAYMENT_COLORS[p.method as PaymentMethodKey] }} />
-                        <span className="text-sm font-medium">{paymentLabel(p.method)}</span>
+                {paymentsData.map((p) => {
+                  const key = (p.method.toUpperCase() in PAYMENT_COLORS ? p.method.toUpperCase() : 'COD') as PaymentMethodKey
+                  return (
+                    <div key={p.method}>
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full" style={{ background: PAYMENT_COLORS[key] || '#10b981' }} />
+                          <span className="text-sm font-medium">{paymentLabel(p.method)}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground tabular-nums">{formatBDT(p.amount)}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground tabular-nums">{formatBDT(p.amount)}</span>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full" style={{ width: `${p.percentage}%`, background: PAYMENT_COLORS[key] || '#10b981' }} />
+                      </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full" style={{ width: `${p.percentage}%`, background: PAYMENT_COLORS[p.method as PaymentMethodKey] }} />
-                    </div>
-                  </div>
-                ))}
-                {data && !data.payments.length && <p className="text-sm text-muted-foreground">No orders in this period.</p>}
+                  )
+                })}
               </div>
               <div className="mt-6 border-t pt-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total Revenue</span>
-                  <span className="font-semibold">{m ? formatBDT(m.revenue.value) : '—'}</span>
+                  <span className="text-muted-foreground">Total 30d Revenue</span>
+                  <span className="font-semibold">{formatBDT(m.revenue.value)}</span>
                 </div>
               </div>
             </CardContent>
@@ -145,7 +170,7 @@ export default function DashboardPage() {
             <CardHeader className="relative z-10 flex flex-row items-start justify-between">
               <div>
                 <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>Latest 5 orders{store ? '' : ' across all stores'}</CardDescription>
+                <CardDescription>Latest customer orders across Bangladesh</CardDescription>
               </div>
               <Link href="/orders" className="text-sm font-medium text-indigo-600 hover:underline">
                 View all
@@ -153,7 +178,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="space-y-4">
-                {data?.recentOrders.map((order) => (
+                {recentOrders.map((order) => (
                   <Link key={order.id} href={`/orders?open=${order.id}`} className="flex items-center justify-between rounded-xl p-1 hover:bg-white/50">
                     <div className="flex items-center gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-600 text-white shadow-md shadow-sky-500/25">
@@ -162,8 +187,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm font-medium">{order.shippingName}</p>
                         <p className="text-xs text-muted-foreground">
-                          #{order.orderNumber} • {store ? '' : `${order.store.name} • `}
-                          {timeAgo(order.createdAt)}
+                          #{order.orderNumber} • {order.store.name} • {timeAgo(order.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -180,12 +204,12 @@ export default function DashboardPage() {
           <Card className="relative overflow-hidden md:col-span-2 lg:col-span-3">
             <CardGlow from="from-amber-400/25" orb="bg-amber-400/35" />
             <CardHeader className="relative z-10">
-              <CardTitle>Top Products</CardTitle>
-              <CardDescription>Best sellers in the last 30 days</CardDescription>
+              <CardTitle>Top Selling Products</CardTitle>
+              <CardDescription>Highest revenue products this month</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="space-y-4">
-                {data?.topProducts.map((product, index) => (
+                {topProducts.map((product, index) => (
                   <div key={product.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 text-sm font-semibold text-white shadow-md shadow-amber-500/25">
@@ -199,7 +223,6 @@ export default function DashboardPage() {
                     <p className="text-sm font-semibold">{formatBDT(product.revenue)}</p>
                   </div>
                 ))}
-                {data && !data.topProducts.length && <p className="text-sm text-muted-foreground">No sales yet.</p>}
               </div>
             </CardContent>
           </Card>

@@ -347,6 +347,23 @@ export const MOCK_METRICS = {
   stock: { units: 842, products: 8 }
 }
 
+export const MOCK_MONTHLY_CHART = [
+  { month: 'Jun', revenue: 420000, orders: 82, customers: 74 },
+  { month: 'Jul', revenue: 580000, orders: 110, customers: 98 },
+  { month: 'Aug', revenue: 710000, orders: 135, customers: 118 },
+  { month: 'Sep', revenue: 890000, orders: 168, customers: 142 },
+  { month: 'Oct', revenue: 1340000, orders: 224, customers: 195 },
+  { month: 'Nov', revenue: 1725000, orders: 279, customers: 304 }
+]
+
+export const MOCK_PAYMENTS = [
+  { method: 'BKASH', percentage: 44, amount: 759000, orders: 122 },
+  { method: 'COD', percentage: 28, amount: 483000, orders: 78 },
+  { method: 'NAGAD', percentage: 16, amount: 276000, orders: 45 },
+  { method: 'SSLCOMMERZ', percentage: 9, amount: 155250, orders: 25 },
+  { method: 'ROCKET', percentage: 3, amount: 51750, orders: 9 }
+]
+
 export const MOCK_REVENUE_CHART = [
   { date: 'Oct 05', revenue: 42000 },
   { date: 'Oct 10', revenue: 58000 },
