@@ -2,16 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Monitor, Smartphone, Store, Palette, Sparkles, ExternalLink, Globe, Layers, ArrowUpRight } from 'lucide-react'
+import { Plus, Store, Palette, Sparkles, ExternalLink, Globe, Layers, ArrowUpRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { UploadThemeDialog } from '@/components/themes/upload-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { useStoreScope } from '@/hooks/use-store-scope'
-import { MOCK_THEMES, MOCK_THEME_INSTALLS } from '@/lib/mock-data'
+import { MOCK_THEME_INSTALLS } from '@/lib/mock-data'
 
 export default function ThemesPage() {
   const { store } = useStoreScope()
