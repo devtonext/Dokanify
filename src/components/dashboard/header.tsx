@@ -98,8 +98,8 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-              <span className="block">{session?.user?.name}</span>
-              <span className="block text-xs font-normal text-muted-foreground">{session?.user?.email}</span>
+              <span className="block">{session?.user?.name || 'Nazmul Hossen'}</span>
+              <span className="block text-xs font-normal text-muted-foreground">{session?.user?.email || 'merchant@dokanify.com'}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

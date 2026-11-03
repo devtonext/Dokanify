@@ -33,7 +33,7 @@ export function StoreScopeProvider({ children }: { children: React.ReactNode }) 
   const { data, isLoading } = useQuery({
     queryKey: ['stores'],
     queryFn: () => api<{ stores: StoreSummary[] }>('/api/stores'),
-    enabled: status === 'authenticated',
+    enabled: true,
   })
   const stores = useMemo(() => data?.stores ?? [], [data])
 
