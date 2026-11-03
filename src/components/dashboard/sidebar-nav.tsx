@@ -42,9 +42,8 @@ const navigation: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: 'Platform',
+    label: 'Storefront',
     items: [
-      { name: 'Stores', href: '/stores', icon: Store },
       { name: 'Themes', href: '/theme', icon: IconTheme },
       { name: 'Analytics', href: '/analytics', icon: IconAnalytics },
     ],
@@ -55,7 +54,7 @@ const navigation: { label: string; items: NavItem[] }[] = [
   },
 ]
 
-const ROLE_LABEL: Record<string, string> = { SUPER_ADMIN: 'Super admin', THEME_MANAGER: 'Theme manager', SUPPORT: 'Support' }
+const ROLE_LABEL: Record<string, string> = { SUPER_ADMIN: 'Store Owner', THEME_MANAGER: 'Store Manager', SUPPORT: 'Support' }
 
 const itemBase =
   'group relative flex w-full items-center rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset'
@@ -94,7 +93,7 @@ export function SidebarNav() {
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <span className="block text-sm font-semibold tracking-tight text-foreground">NexDrop</span>
-            <span className="block text-[11px] text-muted-foreground">Super Admin</span>
+            <span className="block text-[11px] text-muted-foreground">Merchant Dashboard</span>
           </div>
         )}
       </div>

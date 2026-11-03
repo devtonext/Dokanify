@@ -35,7 +35,7 @@ export function SetupForm() {
       return
     }
     await signIn('credentials', { email: f.email, password: f.password, redirect: false })
-    router.replace('/stores')
+    router.replace('/')
     router.refresh()
   }
 
@@ -61,7 +61,7 @@ export function SetupForm() {
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="w-full" disabled={busy || !ready}>
         {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Create super admin
+        Create merchant account
       </Button>
     </form>
   )

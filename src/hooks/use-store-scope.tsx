@@ -37,10 +37,18 @@ export function StoreScopeProvider({ children }: { children: React.ReactNode }) 
   })
   const stores = useMemo(() => data?.stores ?? [], [data])
 
-  // Forget a scope that points at a store that no longer exists.
+  // Auto-scope to the first available merchant store if none is selected
   useEffect(() => {
-    if (data && storeId && !stores.some((s) => s.id === storeId)) setState('')
-  }, [data, storeId, stores])
+    if (stores.length > 0) {
+      if (!storeId || !stores.some((s) => s.id === storeId)) {
+        const first = stores[0].id
+        setState(first)
+        try {
+          window.localStorage.setItem(KEY, first)
+        } catch {}
+      }
+    }
+  }, [stores, storeId])
 
   const setStoreId = useCallback((id: string) => {
     setState(id)

@@ -49,7 +49,30 @@ async function main() {
     })
     console.log(`✔ super admin: ${email}`)
   } else if ((await db.adminUser.count()) === 0) {
-    console.log('… no admin yet — open the site and create the first super admin on /setup')
+    console.log('… no admin yet — open the site and create the first merchant account on /setup')
+  }
+
+  // Ensure an initial merchant store exists with Starter plan
+  if ((await db.store.count()) === 0) {
+    const starterPlan = await db.plan.findUnique({ where: { key: 'free' } })
+    if (starterPlan) {
+      const initialStore = await db.store.create({
+        data: {
+          slug: 'dokanify-store',
+          name: 'Dokanify Store',
+          ownerName: 'Nazmul Hossen',
+          email: 'merchant@dokanify.com',
+          phone: '+8801711000000',
+          city: 'Dhaka',
+          planId: starterPlan.id,
+          settings: {
+            payments: { cod: true, bkash: true, nagad: true },
+            shipping: { defaultFee: 60, insideDhaka: 60, outsideDhaka: 120 }
+          }
+        }
+      })
+      console.log('✔ created initial merchant store:', initialStore.name)
+    }
   }
 }
 

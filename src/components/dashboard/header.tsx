@@ -72,7 +72,22 @@ export function Header() {
         <GlobalSearch />
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <Link
+          href="/theme"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/80 px-3 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-300"
+        >
+          <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Live Storefront ↗</span>
+        </Link>
+
+        <Link
+          href="/theme"
+          className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-xs transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+        >
+          <span>Theme Editor</span>
+        </Link>
+
         <Notifications />
 
         <DropdownMenu>
@@ -107,14 +122,14 @@ export function Header() {
 function StoreSwitcher() {
   const { storeId, setStoreId, stores } = useStoreScope()
   return (
-    <Select value={storeId || 'all'} onValueChange={(v) => setStoreId(v === 'all' ? '' : v)}>
+    <Select value={storeId || (stores[0]?.id ?? '')} onValueChange={(v) => setStoreId(v)}>
       <SelectTrigger className="w-[150px] shrink-0 bg-white/70 sm:w-[210px]" aria-label="Store scope">
         <Store className="h-4 w-4 text-muted-foreground" />
-        <SelectValue />
+        <SelectValue placeholder="Select store" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All stores</SelectItem>
-        <SelectSeparator />
+        {stores.length > 1 && <SelectItem value="all">All stores</SelectItem>}
+        {stores.length > 1 && <SelectSeparator />}
         {stores.map((s) => (
           <SelectItem key={s.id} value={s.id}>
             {s.name}
