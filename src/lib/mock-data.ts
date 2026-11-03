@@ -374,10 +374,3 @@ export const MOCK_REVENUE_CHART = [
   { date: 'Nov 03', revenue: 92000 }
 ]
 
-export const MOCK_PAYMENTS = [
-  { method: 'bKash', percentage: 44, amount: 759000 },
-  { method: 'Cash on Delivery (COD)', percentage: 28, amount: 483000 },
-  { method: 'Nagad', percentage: 16, amount: 276000 },
-  { method: 'SSLCOMMERZ / Cards', percentage: 9, amount: 155250 },
-  { method: 'Rocket', percentage: 3, amount: 51750 }
-]
