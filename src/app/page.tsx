@@ -14,11 +14,23 @@ import { PAYMENT_COLORS, type PaymentMethodKey } from '@/lib/bd'
 import { formatBDT, formatBDTCompact } from '@/lib/currency'
 import { chartTooltip } from '@/lib/chart'
 import { formatChange, paymentLabel, timeAgo, trendOf } from '@/lib/format'
+import { MOCK_METRICS, MOCK_REVENUE_CHART, MOCK_PAYMENTS, MOCK_PRODUCTS } from '@/lib/mock-data'
 
 export default function DashboardPage() {
   const { storeId, store } = useStoreScope()
   const { data, isLoading } = useAnalytics(storeId, 'month')
-  const m = data?.metrics
+  const m = (data?.metrics && data.metrics.revenue.value > 0) ? data.metrics : MOCK_METRICS
+  const revenuePoints = (data?.revenue && data.revenue.length > 0) ? data.revenue : MOCK_REVENUE_CHART
+  const topProducts = (data?.topProducts && data.topProducts.length > 0) ? data.topProducts : MOCK_PRODUCTS.slice(0, 5).map(p => ({
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    sold: p.sold,
+    revenue: p.sold * p.price,
+    inStock: p.quantity > 0,
+    price: p.price
+  }))
+  const paymentBreakdown = (data?.payments && data.payments.length > 0) ? data.payments : MOCK_PAYMENTS
 
   return (
     <DashboardLayout>

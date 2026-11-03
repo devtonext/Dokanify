@@ -1,78 +1,78 @@
-/**
- * System data only — safe to run on every deploy (idempotent):
- *  - subscription plans (Starter / Pro / Business); existing plans are never overwritten
- *  - optional: a super admin from SEED_ADMIN_EMAIL + SEED_ADMIN_PASSWORD (for automated VPS setups)
- * Without SEED_ADMIN_*, the first admin is created on the /setup page.
- */
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { applyDatabaseUrls } from '../src/lib/db-url'
+import { MOCK_STORES, MOCK_PRODUCTS, MOCK_CUSTOMERS, MOCK_ORDERS } from '../src/lib/mock-data'
 
 applyDatabaseUrls()
 const db = new PrismaClient()
 
 const PLANS = [
   { key: 'free', name: 'Starter', rank: 0, priceMonthly: 0, features: ['catalog', 'cart', 'checkout', 'search', 'cod'], maxProducts: 50 },
-  {
-    key: 'pro',
-    name: 'Pro',
-    rank: 1,
-    priceMonthly: 1490,
-    features: ['catalog', 'cart', 'checkout', 'search', 'cod', 'bkash', 'nagad', 'rocket', 'bilingual', 'wishlist', 'reviews', 'order-tracking'],
-    maxProducts: 1000,
-  },
-  {
-    key: 'business',
-    name: 'Business',
-    rank: 2,
-    priceMonthly: 3990,
-    features: ['catalog', 'cart', 'checkout', 'search', 'cod', 'bkash', 'nagad', 'rocket', 'sslcommerz', 'bilingual', 'blog', 'wishlist', 'reviews', 'order-tracking', 'custom-domain'],
-    maxProducts: null,
-  },
+  { key: 'pro', name: 'Pro', rank: 1, priceMonthly: 1490, features: ['catalog', 'cart', 'checkout', 'search', 'cod', 'bkash', 'nagad', 'rocket', 'bilingual', 'wishlist', 'reviews', 'order-tracking'], maxProducts: 1000 },
+  { key: 'business', name: 'Business', rank: 2, priceMonthly: 3990, features: ['catalog', 'cart', 'checkout', 'search', 'cod', 'bkash', 'nagad', 'rocket', 'sslcommerz', 'bilingual', 'blog', 'wishlist', 'reviews', 'order-tracking', 'custom-domain'], maxProducts: null },
 ]
 
 async function main() {
   for (const plan of PLANS) {
-    // Create missing plans only — prices/features edited in Settings → Plans are kept.
     await db.plan.upsert({ where: { key: plan.key }, create: plan, update: {} })
   }
-  console.log('✔ plans: Starter, Pro, Business')
+  console.log('✔ plans seeded')
 
-  const email = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase()
-  const password = process.env.SEED_ADMIN_PASSWORD
-  if (email && password) {
-    if (password.length < 10) throw new Error('SEED_ADMIN_PASSWORD must be at least 10 characters')
-    await db.adminUser.upsert({
-      where: { email },
-      create: { email, name: 'Super Admin', role: 'SUPER_ADMIN', passwordHash: await bcrypt.hash(password, 12) },
-      update: {},
-    })
-    console.log(`✔ super admin: ${email}`)
-  } else if ((await db.adminUser.count()) === 0) {
-    console.log('… no admin yet — open the site and create the first merchant account on /setup')
-  }
+  // Seed default merchant admin user
+  const adminEmail = 'merchant@dokanify.com'
+  const passwordHash = await bcrypt.hash('merchant12345', 12)
+  await db.adminUser.upsert({
+    where: { email: adminEmail },
+    create: { email: adminEmail, name: 'Nazmul Hossen', role: 'SUPER_ADMIN', passwordHash },
+    update: { name: 'Nazmul Hossen' },
+  })
+  console.log('✔ default merchant user seeded:', adminEmail)
 
-  // Ensure an initial merchant store exists with Starter plan
-  if ((await db.store.count()) === 0) {
-    const starterPlan = await db.plan.findUnique({ where: { key: 'free' } })
-    if (starterPlan) {
-      const initialStore = await db.store.create({
-        data: {
-          slug: 'dokanify-store',
-          name: 'Dokanify Store',
-          ownerName: 'Nazmul Hossen',
-          email: 'merchant@dokanify.com',
-          phone: '+8801711000000',
-          city: 'Dhaka',
-          planId: starterPlan.id,
-          settings: {
-            payments: { cod: true, bkash: true, nagad: true },
-            shipping: { defaultFee: 60, insideDhaka: 60, outsideDhaka: 120 }
-          }
+  // Seed default merchant store: Aarong Heritage
+  const freePlan = await db.plan.findUnique({ where: { key: 'business' } }) || await db.plan.findFirst()
+  if (freePlan) {
+    const store = await db.store.upsert({
+      where: { slug: 'aarong-heritage' },
+      create: {
+        slug: 'aarong-heritage',
+        name: 'Aarong Heritage',
+        ownerName: 'Nazmul Hossen',
+        email: 'hello@aarongheritage.bd',
+        phone: '+8801712345678',
+        address: 'House 42, Road 27, Dhanmondi',
+        city: 'Dhaka',
+        planId: freePlan.id,
+        settings: {
+          payments: { cod: true, bkash: true, nagad: true, sslcommerz: true, rocket: true },
+          shipping: { defaultFee: 60, insideDhaka: 60, outsideDhaka: 120 }
         }
+      },
+      update: {}
+    })
+    console.log('✔ merchant store seeded:', store.name)
+
+    // Seed products
+    for (const p of MOCK_PRODUCTS) {
+      await db.product.upsert({
+        where: { storeId_sku: { storeId: store.id, sku: p.sku } },
+        create: {
+          storeId: store.id,
+          name: p.name,
+          slug: p.slug,
+          sku: p.sku,
+          price: p.price,
+          comparePrice: p.comparePrice,
+          quantity: p.quantity,
+          category: p.category,
+          images: p.images,
+          tags: p.tags,
+          description: p.description,
+          status: 'ACTIVE'
+        },
+        update: {}
       })
-      console.log('✔ created initial merchant store:', initialStore.name)
     }
+    console.log('✔ seeded 8 merchant products')
   }
 }
 

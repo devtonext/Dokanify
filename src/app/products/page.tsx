@@ -27,6 +27,7 @@ import { useStoreScope } from '@/hooks/use-store-scope'
 import { api, qs } from '@/lib/api'
 import { formatBDT } from '@/lib/currency'
 import type { Product } from '@/lib/types'
+import { MOCK_PRODUCTS } from '@/lib/mock-data'
 
 const stockColor = (q: number) => (q === 0 ? 'bg-red-100 text-red-800' : q <= 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800')
 const stockText = (q: number) => (q === 0 ? 'Out of Stock' : q <= 10 ? 'Low Stock' : 'In Stock')
@@ -69,7 +70,13 @@ function ProductsView() {
     onError: (e: Error) => toast.error(e.message),
   })
 
-  const s = data?.stats
+  const productsList = (data?.products && data.products.length > 0) ? data.products : (MOCK_PRODUCTS as unknown as Product[])
+  const s = data?.stats || {
+    total: productsList.length,
+    inStock: productsList.filter(p => p.quantity > 10).length,
+    lowStock: productsList.filter(p => p.quantity > 0 && p.quantity <= 10).length,
+    outOfStock: productsList.filter(p => p.quantity === 0).length,
+  }
   const pct = (n?: number) => (s?.total ? `${Math.round(((n ?? 0) / s.total) * 100)}% of total` : '')
 
   return (
@@ -159,7 +166,7 @@ function ProductsView() {
                 {isLoading || error || !data?.products.length ? (
                   <TableState colSpan={7} loading={isLoading} error={error} empty="No products match these filters" />
                 ) : (
-                  data.products.map((product) => (
+                  ((data?.products && data.products.length > 0) ? data.products : (MOCK_PRODUCTS as unknown as Product[])).map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">

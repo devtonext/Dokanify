@@ -35,6 +35,7 @@ import { DISTRICTS, formatBdPhone } from '@/lib/bd'
 import { formatBDT } from '@/lib/currency'
 import { formatDate, initials, paymentLabel } from '@/lib/format'
 import type { Customer, Order } from '@/lib/types'
+import { MOCK_CUSTOMERS } from '@/lib/mock-data'
 
 function CustomersView() {
   const qc = useQueryClient()
