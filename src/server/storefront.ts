@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { HttpError, notFound, route } from '@/lib/http'
 import { storage } from '@/lib/storage'
 import { parseStoreSettings } from '@/lib/store-settings'
+import { buildUniversalBridgeScript } from '@/lib/themes/universal-bridge'
 import { mimeFor } from '@/lib/themes/validate'
 import { themeBaseUrl, themePrefix } from '@/server/themes'
 
@@ -50,7 +51,6 @@ export async function resolveThemeContext(
   if (opts.theme && opts.version) {
     const version = await db.themeVersion.findFirst({ where: { version: opts.version, theme: { slug: opts.theme } } })
     if (!version) throw notFound('Theme version')
-    // A store's own install of this theme wins over the theme's demo content.
     const install = await db.themeInstall.findFirst({ where: { storeId, themeId: version.themeId } })
     if (install && install.versionId === version.id) return { version, content: install.draftContent }
     return { version, content: version.defaults }
@@ -60,7 +60,6 @@ export async function resolveThemeContext(
     include: { publishedVersion: true },
   })
   if (live?.publishedVersion && live.publishedContent) return { version: live.publishedVersion, content: live.publishedContent }
-  // Local theme development (`vite dev`): store data only — the SDK falls back to the theme's own defaults.
   if (opts.mode === 'preview') return { version: null, content: null }
   throw new HttpError(404, 'This store has not published a theme yet')
 }
@@ -73,11 +72,9 @@ export async function storefrontBootstrap(
   const store = await getActiveStore(slug)
   const settings = parseStoreSettings(store.settings)
   const { version, content } = await resolveThemeContext(store.id, opts)
-  // Without a theme version (local dev) assume the theme supports everything the plan allows.
   const themeFeatures = new Set(version ? version.features : [...store.plan.features, 'cod'])
   const planFeatures = new Set(store.plan.features)
 
-  // A payment method is offered only if the store enabled it, the theme supports it and the plan unlocks it.
   const payments = PAYMENT_METHODS.filter((m) => {
     const key = m.toLowerCase() as keyof typeof settings.payments
     const feature = PAYMENT_FEATURE[m]
@@ -151,9 +148,9 @@ export function trailingSlashRedirect(req: Request, isRoot: boolean) {
 }
 
 /**
- * Serves a file from a theme version's dist/. index.html gets the runtime config injected
- * so the SDK knows which store / mode / install to load.
- * `sandboxed` (admin host) makes the page an opaque origin: theme JS can never read admin cookies.
+ * Serves a file from a theme version's dist/. index.html gets both `window.__NEXDROP_CONFIG__`
+ * and the Universal Storefront Runtime Bridge injected so both native `@nexdrop/theme-sdk`
+ * themes and unmodified React + Vite bundles work out of the box.
  */
 export async function serveThemeFile(opts: {
   slug: string
@@ -177,7 +174,6 @@ export async function serveThemeFile(opts: {
 
   let file = await storage.get(key)
   let isIndex = key.endsWith('/dist/index.html')
-  // SPA fallback for extension-less paths
   if (!file && !clean.startsWith('_pkg/') && !/\.[a-z0-9]+$/i.test(clean)) {
     file = await storage.get(`${prefix}/dist/index.html`)
     isIndex = true
@@ -193,8 +189,8 @@ export async function serveThemeFile(opts: {
 
   if (isIndex) {
     const html = new TextDecoder().decode(file.body)
-    // No <base> tag: themes use hash routing, so the document path is always the theme root.
-    const inject = `<script>window.__NEXDROP_CONFIG__=${escapeJson(opts.config)}</script>`
+    const bridgeScript = buildUniversalBridgeScript()
+    const inject = `<script>window.__NEXDROP_CONFIG__=${escapeJson(opts.config)};${bridgeScript}</script>`
     const body = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + inject) : inject + html
     headers['Content-Type'] = 'text/html; charset=utf-8'
     headers['Cache-Control'] = 'no-store'
@@ -202,7 +198,6 @@ export async function serveThemeFile(opts: {
     return new Response(body, { headers })
   }
 
-  // Versions are immutable → cache forever.
   headers['Cache-Control'] = 'public, max-age=31536000, s-maxage=31536000, immutable'
   if (opts.sandboxed && headers['Content-Type'].startsWith('text/html')) headers['Content-Security-Policy'] = ADMIN_SANDBOX
   return new Response(file.body as BodyInit, { headers })
