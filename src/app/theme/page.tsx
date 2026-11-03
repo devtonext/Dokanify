@@ -30,7 +30,7 @@ export default function ThemesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <!-- Universal Page Header -->
+        {/* Universal Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Themes</h1>
@@ -54,7 +54,7 @@ export default function ThemesPage() {
           </div>
         </div>
 
-        <!-- 4 Metric Cards -->
+        {/* 4 Metric Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Live Theme"
@@ -90,7 +90,7 @@ export default function ThemesPage() {
           />
         </div>
 
-        <!-- Active Live Theme Card -->
+        {/* Active Live Theme Card */}
         {live && (
           <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-white/95 p-6 shadow-sm dark:bg-slate-900/90">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-teal-400/5" />
@@ -147,7 +147,7 @@ export default function ThemesPage() {
           </div>
         )}
 
-        <!-- Installed Themes Library Grid -->
+        {/* Installed Themes Library Grid */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">Theme Library</h2>
